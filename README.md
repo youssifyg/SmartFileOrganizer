@@ -13,6 +13,8 @@ A high-performance Windows desktop application designed for advanced duplicate f
 - **UI:** WPF ( Windows Presentation Foundation )
 - **Packaging:** Inno Setup / MSIX
 
+![ Main Interface ]( assets/image_name.png )
+
 ## Development Journey & AI Integration
 This project serves as a foundational step into desktop software engineering. The development process heavily utilized AI-assisted workflows [ Antigravity desktop environment, Ollama local models ] to accelerate learning, structure the application architecture, and troubleshoot complex system-level errors.
 
