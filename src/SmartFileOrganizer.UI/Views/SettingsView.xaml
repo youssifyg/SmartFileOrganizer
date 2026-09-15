@@ -1,0 +1,121 @@
+<UserControl x:Class="SmartFileOrganizer.UI.Views.SettingsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d"
+             d:DesignHeight="800" d:DesignWidth="800">
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <StackPanel Grid.Row="0" Margin="0,0,0,15">
+            <TextBlock FontSize="24" FontWeight="Bold" Foreground="{DynamicResource PrimaryText}" Text="{DynamicResource StrSettingsTitle}"/>
+            <TextBlock FontSize="14" Foreground="{DynamicResource SecondaryText}" Margin="0,5,0,0" Text="{DynamicResource StrSettingsDesc}"/>
+        </StackPanel>
+
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+            <StackPanel Margin="0,0,15,0">
+                <!-- Scan Exclusions -->
+                <TextBlock FontSize="15" FontWeight="Bold" Foreground="{DynamicResource PrimaryText}" Margin="0,0,0,8" Text="{DynamicResource StrSectionScanExclusions}"/>
+                <StackPanel Margin="0,0,0,10" Orientation="Horizontal">
+                    <TextBlock Text="{DynamicResource StrLabelExcludedExtensions}" Foreground="{DynamicResource PrimaryText}" VerticalAlignment="Center" Width="160"/>
+                    <TextBox Background="{DynamicResource ControlBackground}" Foreground="{DynamicResource InputText}" BorderBrush="{DynamicResource ControlBorder}" Height="26" Padding="4" Width="300" x:Name="ExcludedExtensionsBox"/>
+                </StackPanel>
+                <StackPanel Margin="0,0,0,20" Orientation="Horizontal">
+                    <TextBlock Text="{DynamicResource StrLabelExcludedFolders}" Foreground="{DynamicResource PrimaryText}" VerticalAlignment="Center" Width="160"/>
+                    <TextBox Background="{DynamicResource ControlBackground}" Foreground="{DynamicResource InputText}" BorderBrush="{DynamicResource ControlBorder}" x:Name="ExcludedFoldersBox" Height="26" Padding="4" Width="210"/>
+                    <Button Background="{DynamicResource ControlBackground}" Foreground="{DynamicResource PrimaryText}" BorderBrush="{DynamicResource ControlBorder}" Content="Browse..." Height="26" Width="80" Margin="10,0,0,0" Command="{ Binding BrowseFolderCommand }" CommandParameter="{ Binding ElementName=ExcludedFoldersBox }"/>
+                </StackPanel>
+
+                <!-- File Size Limits -->
+                <TextBlock FontSize="15" FontWeight="Bold" Foreground="{DynamicResource PrimaryText}" Margin="0,0,0,8" Text="{DynamicResource StrSectionFileSizeLimits}"/>
+                <StackPanel Margin="0,0,0,10" Orientation="Horizontal">
+                    <TextBlock Text="{DynamicResource StrLabelMinFileSize}" Foreground="{DynamicResource PrimaryText}" VerticalAlignment="Center" Width="160"/>
+                    <TextBox Background="{DynamicResource ControlBackground}" Foreground="{DynamicResource InputText}" BorderBrush="{DynamicResource ControlBorder}" Height="26" Padding="4" Width="120" x:Name="MinSizeBox"/>
+                </StackPanel>
+                <StackPanel Margin="0,0,0,20" Orientation="Horizontal">
+                    <TextBlock Text="{DynamicResource StrLabelMaxFileSize}" Foreground="{DynamicResource PrimaryText}" VerticalAlignment="Center" Width="160"/>
+                    <TextBox Background="{DynamicResource ControlBackground}" Foreground="{DynamicResource InputText}" BorderBrush="{DynamicResource ControlBorder}" Height="26" Padding="4" Width="120" x:Name="MaxSizeBox"/>
+                    <TextBlock Foreground="{DynamicResource SecondaryText}" Margin="10,0,0,0" Text="{DynamicResource StrMaxSizeNote}" VerticalAlignment="Center"/>
+                </StackPanel>
+
+                <!-- UI & Experience -->
+                <TextBlock FontSize="15" FontWeight="Bold" Foreground="{DynamicResource PrimaryText}" Margin="0,0,0,8" Text="{DynamicResource StrSectionUIExperience}"/>
+                <StackPanel Margin="0,0,0,10" Orientation="Horizontal">
+                    <TextBlock Text="{DynamicResource StrLabelLanguage}" Foreground="{DynamicResource PrimaryText}" VerticalAlignment="Center" Width="160"/>
+                    <ComboBox Background="{DynamicResource ControlBackground}" Foreground="#2C3E50" BorderBrush="{DynamicResource ControlBorder}" Height="26" Width="150" x:Name="LanguageComboBox">
+                        <ComboBoxItem Foreground="#2C3E50" Content="{DynamicResource StrLangEnglish}"/>
+                        <ComboBoxItem Foreground="#2C3E50" Content="{DynamicResource StrLangArabic}"/>
+                    </ComboBox>
+                </StackPanel>
+                <StackPanel Margin="0,0,0,20" Orientation="Horizontal">
+                    <TextBlock Text="{DynamicResource StrLabelTheme}" Foreground="{DynamicResource PrimaryText}" VerticalAlignment="Center" Width="160"/>
+                    <ComboBox Background="{DynamicResource ControlBackground}" Foreground="#2C3E50" BorderBrush="{DynamicResource ControlBorder}" Height="26" Width="150" x:Name="ThemeComboBox">
+                        <ComboBoxItem Foreground="#2C3E50" Content="{DynamicResource StrThemeLight}"/>
+                        <ComboBoxItem Foreground="#2C3E50" Content="{DynamicResource StrThemeDark}"/>
+                    </ComboBox>
+                </StackPanel>
+
+                <!-- Scan Performance & Visibility -->
+                <TextBlock FontSize="15" FontWeight="Bold" Foreground="{DynamicResource PrimaryText}" Margin="0,0,0,8" Text="{DynamicResource StrSectionScanPerfVisibility}"/>
+                <CheckBox Content="{DynamicResource StrCheckIncludeHidden}" Margin="0,0,0,8" x:Name="IncludeHiddenCheck" Foreground="{DynamicResource PrimaryText}"/>
+                <CheckBox Content="{DynamicResource StrCheckIncludeSystem}" Margin="0,0,0,12" x:Name="IncludeSystemCheck" Foreground="{DynamicResource PrimaryText}"/>
+                <StackPanel Margin="0,0,0,20" Orientation="Horizontal">
+                    <TextBlock Text="{DynamicResource StrLabelParallelismLevel}" Foreground="{DynamicResource PrimaryText}" VerticalAlignment="Center" Width="160"/>
+                    <ComboBox Background="{DynamicResource ControlBackground}" Foreground="#2C3E50" BorderBrush="{DynamicResource ControlBorder}" Height="26" Width="150" x:Name="ParallelismComboBox">
+                        <ComboBoxItem Foreground="#2C3E50" Content="{DynamicResource StrParallelismSlow}"/>
+                        <ComboBoxItem Foreground="#2C3E50" Content="{DynamicResource StrParallelismBalanced}"/>
+                        <ComboBoxItem Foreground="#2C3E50" Content="{DynamicResource StrParallelismFast}"/>
+                    </ComboBox>
+                </StackPanel>
+
+                <!-- Category Extension Mapping -->
+                <TextBlock FontSize="15" FontWeight="Bold" Foreground="{DynamicResource PrimaryText}" Margin="0,0,0,8" Text="{DynamicResource StrSectionCategoryMap}"/>
+                <DataGrid AlternatingRowBackground="{DynamicResource DataGridAltRowBackground}" AutoGenerateColumns="False" Background="{DynamicResource DataGridBackground}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CanUserAddRows="False" Height="140" Margin="0,0,0,8" x:Name="CategoryMapGrid" RowBackground="{DynamicResource DataGridRowBackground}" Foreground="{DynamicResource PrimaryText}" HorizontalGridLinesBrush="{DynamicResource BorderBrush}">
+                    <DataGrid.ColumnHeaderStyle>
+                        <Style TargetType="DataGridColumnHeader">
+                            <Setter Property="Background" Value="{DynamicResource DataGridHeaderBackground}"/>
+                            <Setter Property="Foreground" Value="{DynamicResource PrimaryText}"/>
+                            <Setter Property="FontWeight" Value="SemiBold"/>
+                            <Setter Property="Padding" Value="6,4"/>
+                            <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
+                            <Setter Property="BorderThickness" Value="0,0,1,1"/>
+                        </Style>
+                    </DataGrid.ColumnHeaderStyle>
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Binding="{Binding Extension}" Header="{DynamicResource StrColExtension}" Width="120"/>
+                        <DataGridTextColumn Binding="{Binding Category}" Header="{DynamicResource StrColCategory}" Width="*"/>
+                    </DataGrid.Columns>
+                </DataGrid>
+                <StackPanel Margin="0,0,0,25" Orientation="Horizontal">
+                    <Button Background="{DynamicResource ControlBackground}" Foreground="{DynamicResource PrimaryText}" BorderBrush="{DynamicResource ControlBorder}" Click="AddCategoryMap_Click" Content="{DynamicResource StrBtnAddRow}" Height="26" Margin="0,0,8,0" Width="80"/>
+                    <Button Background="{DynamicResource ControlBackground}" Foreground="{DynamicResource PrimaryText}" BorderBrush="{DynamicResource ControlBorder}" Click="RemoveCategoryMap_Click" Content="{DynamicResource StrBtnRemoveSelected}" Height="26" Width="110"/>
+                </StackPanel>
+
+                <!-- Deletion Safety Options -->
+                <TextBlock FontSize="15" FontWeight="Bold" Foreground="{DynamicResource PrimaryText}" Margin="0,0,0,8" Text="{DynamicResource StrSectionDeletionSafety}"/>
+                <CheckBox Content="{DynamicResource StrCheckRecycleBinDefault}" Margin="0,0,0,8" x:Name="RecycleBinCheck" Foreground="{DynamicResource PrimaryText}"/>
+                <CheckBox Content="{DynamicResource StrCheckRecycleBinConfirm}" Margin="0,0,0,8" x:Name="ConfirmCheck" Foreground="{DynamicResource PrimaryText}"/>
+                <CheckBox Content="{DynamicResource StrCheckPermanentDelete}" Margin="0,0,0,25" x:Name="PermanentDeleteCheck" Foreground="{DynamicResource PrimaryText}"/>
+
+                <!-- Phase S4 Advanced & Maintenance -->
+                <StackPanel Margin="0,0,0,20">
+                    <CheckBox Content="{DynamicResource StrAutoScan}" IsChecked="{Binding Settings.AutoScanEnabled}" x:Name="AutoScanCheck" Foreground="{DynamicResource PrimaryText}"/>
+                    <CheckBox Content="{DynamicResource StrMinimizeTray}" IsChecked="{Binding Settings.MinimizeToTray}" x:Name="MinimizeTrayCheck" Foreground="{DynamicResource PrimaryText}"/>
+                    <StackPanel Orientation="Horizontal" Margin="0,5,0,0">
+                        <TextBlock Text="{DynamicResource StrHistoryDays}" Foreground="{DynamicResource PrimaryText}" VerticalAlignment="Center" Width="160"/>
+                        <TextBox Background="{DynamicResource ControlBackground}" Foreground="{DynamicResource InputText}" BorderBrush="{DynamicResource ControlBorder}" Height="26" Padding="4" Width="120" x:Name="HistoryDaysBox" Text="{Binding Settings.HistoryRetentionDays}"/>
+                        <TextBlock Text="{DynamicResource StrHistoryNote}" Foreground="{DynamicResource SecondaryText}" Margin="10,0,0,0" VerticalAlignment="Center"/>
+                    </StackPanel>
+                    <Button Background="{DynamicResource ControlBackground}" Foreground="{DynamicResource PrimaryText}" BorderBrush="{DynamicResource ControlBorder}" Content="{DynamicResource StrClearHistory}" Height="26" Width="140" Margin="0,5,0,0" Click="ClearHistory_Click"/>
+                    <Button Background="{DynamicResource ControlBackground}" Foreground="{DynamicResource PrimaryText}" BorderBrush="{DynamicResource ControlBorder}" Content="{DynamicResource StrResetDefaults}" Height="26" Width="140" Margin="0,5,0,0" Click="ResetDefaults_Click"/>
+                </StackPanel>
+
+                <Button Background="{DynamicResource CardBackground1}" BorderThickness="0" Click="SaveSettings_Click" Content="{DynamicResource StrBtnSaveSettings}" Foreground="White" Height="36" HorizontalAlignment="Left" Margin="0,0,0,30" Width="140"/>
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</UserControl>

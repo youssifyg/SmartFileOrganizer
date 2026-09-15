@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="SmartFileOrganizer.Application/SmartFileOrganizer.Application.csproj" />
+  <Project Path="SmartFileOrganizer.Core/SmartFileOrganizer.Core.csproj" />
+  <Project Path="SmartFileOrganizer.Infrastructure/SmartFileOrganizer.Infrastructure.csproj" />
+  <Project Path="SmartFileOrganizer.UI/SmartFileOrganizer.UI.csproj" />
+</Solution>

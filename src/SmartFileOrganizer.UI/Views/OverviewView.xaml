@@ -1,0 +1,132 @@
+<UserControl x:Class="SmartFileOrganizer.UI.Views.OverviewView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d"
+             d:DesignHeight="800" d:DesignWidth="800">
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <Grid Margin="20">
+            <!-- State 1: Cards View -->
+            <StackPanel Visibility="{ Binding CardsViewVisibility }" x:Name="CardsViewPanel">
+                <TextBlock FontSize="26" FontWeight="Bold" Foreground="{DynamicResource PrimaryText}" Margin="0,0,0,8" Text="{DynamicResource StrOverviewTitle}"/>
+                <TextBlock FontSize="14" Foreground="{DynamicResource SecondaryText}" Margin="0,0,0,15" Text="{DynamicResource StrOverviewDesc}"/>
+                
+                <StackPanel Margin="0,0,0,20">
+                    <UniformGrid Columns="2">
+                        <Border Background="{DynamicResource CardBackground1}" CornerRadius="8" Height="120" Margin="15" Cursor="Hand">
+                            <Border.InputBindings>
+                                <MouseBinding Gesture="LeftClick" Command="{ Binding OpenScannedFilesCommand }" />
+                            </Border.InputBindings>
+                            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                                <TextBlock FontSize="16" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center" Text="{DynamicResource StrCardTotalScanned}"/>
+                                <TextBlock FontSize="30" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center" Margin="0,10,0,0" Text="{ Binding TotalScannedFiles }" />
+                            </StackPanel>
+                        </Border>
+                        <Border Background="{DynamicResource CardBackground2}" CornerRadius="8" Height="120" Margin="15" Cursor="Hand">
+                            <Border.InputBindings>
+                                <MouseBinding Gesture="LeftClick" Command="{ Binding OpenDuplicatesCommand }" />
+                            </Border.InputBindings>
+                            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                                <TextBlock FontSize="16" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center" Text="{DynamicResource StrCardDuplicatesFound}"/>
+                                <TextBlock FontSize="30" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center" Margin="0,10,0,0" Text="{ Binding TotalDuplicatesFound }" />
+                            </StackPanel>
+                        </Border>
+                    </UniformGrid>
+                </StackPanel>
+
+                <!-- Section 1: System Temp Cleanup -->
+                <Border Background="{DynamicResource ControlBackground}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="6" Padding="16" Margin="0,0,0,20">
+                    <StackPanel>
+                        <TextBlock Text="{DynamicResource StrSectionTempCleanup}" FontWeight="Bold" FontSize="18" Foreground="{DynamicResource PrimaryText}" Margin="0,0,0,12" />
+                        <TextBlock Text="{DynamicResource StrDescTempCleanup}" Foreground="{DynamicResource SecondaryText}" Margin="0,0,0,12" TextWrapping="Wrap" />
+                        <Button Content="{DynamicResource StrBtnCleanTemp}" Command="{ Binding CleanTempCommand }" Background="{DynamicResource CardBackground2}" Foreground="White" BorderBrush="{DynamicResource ControlBorder}" FontWeight="SemiBold" Padding="16,8" HorizontalAlignment="Left" Cursor="Hand" Margin="0,0,0,12" />
+                        <TextBlock Text="{ Binding TempCleanupResult }" Foreground="{DynamicResource PrimaryText}" FontSize="13" TextWrapping="Wrap" />
+                    </StackPanel>
+                </Border>
+
+                <!-- Section 2: Drive Relocation -->
+                <Border Background="{DynamicResource ControlBackground}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="6" Padding="16" Margin="0,0,0,20">
+                    <StackPanel>
+                        <TextBlock Text="{DynamicResource StrSectionDriveRelocation}" FontWeight="Bold" FontSize="18" Foreground="{DynamicResource PrimaryText}" Margin="0,0,0,12" />
+                        <TextBlock Text="{DynamicResource StrDescDriveRelocation}" Foreground="{DynamicResource SecondaryText}" Margin="0,0,0,12" TextWrapping="Wrap" />
+
+                        <!-- Source Path -->
+                        <TextBlock Text="{DynamicResource StrLabelSourcePath}" Foreground="{DynamicResource PrimaryText}" FontWeight="SemiBold" Margin="0,0,0,4" />
+                        <Grid Margin="0,0,0,12">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <TextBox Background="{DynamicResource ControlBackground}" Foreground="{DynamicResource InputText}" BorderBrush="{DynamicResource ControlBorder}" Text="{ Binding SourcePath, UpdateSourceTrigger=PropertyChanged }" Padding="8,6" />
+                            <Button Background="{DynamicResource ControlBackground}" Foreground="{DynamicResource PrimaryText}" BorderBrush="{DynamicResource ControlBorder}" Command="{ Binding BrowseSourceCommand }" Content="{DynamicResource StrBtnBrowse}" Grid.Column="1" Margin="10,0,0,0" Width="80" />
+                        </Grid>
+
+                        <!-- Destination Path -->
+                        <TextBlock Text="{DynamicResource StrLabelDestinationPath}" Foreground="{DynamicResource PrimaryText}" FontWeight="SemiBold" Margin="0,0,0,4" />
+                        <Grid Margin="0,0,0,12">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <TextBox Background="{DynamicResource ControlBackground}" Foreground="{DynamicResource InputText}" BorderBrush="{DynamicResource ControlBorder}" Text="{ Binding DestinationPath, UpdateSourceTrigger=PropertyChanged }" Padding="8,6" />
+                            <Button Background="{DynamicResource ControlBackground}" Foreground="{DynamicResource PrimaryText}" BorderBrush="{DynamicResource ControlBorder}" Command="{ Binding BrowseDestinationCommand }" Content="{DynamicResource StrBtnBrowse}" Grid.Column="1" Margin="10,0,0,0" Width="80" />
+                        </Grid>
+
+                        <Button Content="{DynamicResource StrBtnRelocateFiles}" Command="{ Binding RelocateDriveCommand }" Background="{DynamicResource CardBackground1}" Foreground="White" BorderBrush="{DynamicResource ControlBorder}" FontWeight="SemiBold" Padding="16,8" HorizontalAlignment="Left" Cursor="Hand" Margin="0,0,0,12" />
+                        <TextBlock Text="{ Binding RelocationResultText }" Foreground="{DynamicResource PrimaryText}" FontSize="13" TextWrapping="Wrap" />
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+
+            <!-- State 2: Detailed Categorized View -->
+            <Grid Visibility="{ Binding DetailViewVisibility }" x:Name="DetailViewPanel">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <!-- Header with Back Button -->
+                <Grid Grid.Row="0" Margin="0,0,0,15">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <Button Background="{DynamicResource MutedText}" BorderBrush="{DynamicResource ControlBorder}" BorderThickness="0" Command="{ Binding BackToCardsCommand }" Content="{DynamicResource StrBtnBackOverview}" Foreground="White" Grid.Column="0" Height="30" Margin="0,0,15,0" Width="140"/>
+                    <TextBlock FontSize="20" FontWeight="Bold" Foreground="{DynamicResource PrimaryText}" Grid.Column="1" HorizontalAlignment="Left" Text="{ Binding DetailTitleText }" VerticalAlignment="Center"/>
+                </Grid>
+
+                <!-- Category Filters (Optional placeholders for future routing) -->
+                <StackPanel Grid.Row="2" Margin="0,0,0,10" Orientation="Horizontal">
+                    <Button Background="{DynamicResource ControlBackground}" Foreground="{DynamicResource PrimaryText}" BorderBrush="{DynamicResource ControlBorder}" Command="{ Binding FilterCommand }" CommandParameter="All" Content="{DynamicResource StrFilterAll}" Height="28" Margin="0,0,5,0" Width="75"/>
+                    <Button Background="{DynamicResource ControlBackground}" Foreground="{DynamicResource PrimaryText}" BorderBrush="{DynamicResource ControlBorder}" Command="{ Binding FilterCommand }" CommandParameter="Images" Content="{DynamicResource StrFilterImages}" Height="28" Margin="0,0,5,0" Width="75"/>
+                    <Button Background="{DynamicResource ControlBackground}" Foreground="{DynamicResource PrimaryText}" BorderBrush="{DynamicResource ControlBorder}" Command="{ Binding FilterCommand }" CommandParameter="Documents" Content="{DynamicResource StrFilterDocuments}" Height="28" Margin="0,0,5,0" Width="90"/>
+                    <Button Background="{DynamicResource ControlBackground}" Foreground="{DynamicResource PrimaryText}" BorderBrush="{DynamicResource ControlBorder}" Command="{ Binding FilterCommand }" CommandParameter="Videos" Content="{DynamicResource StrFilterVideos}" Height="28" Margin="0,0,5,0" Width="75"/>
+                    <Button Background="{DynamicResource ControlBackground}" Foreground="{DynamicResource PrimaryText}" BorderBrush="{DynamicResource ControlBorder}" Command="{ Binding FilterCommand }" CommandParameter="Sounds" Content="{DynamicResource StrFilterSounds}" Height="28" Margin="0,0,5,0" Width="75"/>
+                    <Button Background="{DynamicResource ControlBackground}" Foreground="{DynamicResource PrimaryText}" BorderBrush="{DynamicResource ControlBorder}" Command="{ Binding FilterCommand }" CommandParameter="Other" Content="{DynamicResource StrFilterOther}" Height="28" Margin="0,0,5,0" Width="75"/>
+                </StackPanel>
+
+                <!-- DataGrid -->
+                <DataGrid Grid.Row="3" AlternatingRowBackground="{DynamicResource DataGridAltRowBackground}" AutoGenerateColumns="False" Background="{DynamicResource DataGridBackground}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CanUserAddRows="False" GridLinesVisibility="Horizontal" HeadersVisibility="Column" HorizontalGridLinesBrush="{DynamicResource BorderBrush}" ItemsSource="{ Binding FilteredFiles }" RowBackground="{DynamicResource DataGridRowBackground}" Foreground="{DynamicResource PrimaryText}" MinHeight="200">
+                    <DataGrid.ColumnHeaderStyle>
+                        <Style TargetType="DataGridColumnHeader">
+                            <Setter Property="Background" Value="{DynamicResource DataGridHeaderBackground}"/>
+                            <Setter Property="Foreground" Value="{DynamicResource PrimaryText}"/>
+                            <Setter Property="FontWeight" Value="SemiBold"/>
+                            <Setter Property="Padding" Value="6,4"/>
+                            <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
+                            <Setter Property="BorderThickness" Value="0,0,1,1"/>
+                        </Style>
+                    </DataGrid.ColumnHeaderStyle>
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Binding="{ Binding FileName }" Header="{DynamicResource StrColFileName}" IsReadOnly="True" Width="200"/>
+                        <DataGridTextColumn Binding="{ Binding Path }" Header="{DynamicResource StrColPath}" IsReadOnly="True" Width="*"/>
+                        <DataGridTextColumn Binding="{ Binding Category }" Header="{DynamicResource StrColCategory}" IsReadOnly="True" Width="100"/>
+                    </DataGrid.Columns>
+                </DataGrid>
+            </Grid>
+        </Grid>
+    </ScrollViewer>
+</UserControl>
