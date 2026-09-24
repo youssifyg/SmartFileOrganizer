@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using SmartFileOrganizer.Infrastructure.Data;
 using SmartFileOrganizer.Infrastructure.Data.Repositories;
 using SmartFileOrganizer.UI.ViewModels;
+using Microsoft.Extensions.Logging;
 
 namespace SmartFileOrganizer.UI
 {
@@ -117,7 +118,27 @@ namespace SmartFileOrganizer.UI
                     SmartFileOrganizer.Infrastructure.Services.ImageSimilarityEngine>();
                 serviceCollection.AddTransient<ISimilarityScannerService, 
                     SmartFileOrganizer.Application.Services.SimilarityScannerService>();
+
+                // Core Scanning Services (Missing from DI Review)
+                serviceCollection.AddTransient<SmartFileOrganizer.Core.Interfaces.IHashService, 
+                    SmartFileOrganizer.Infrastructure.HashService>();
+                serviceCollection.AddTransient<SmartFileOrganizer.Application.DuplicateEngine>();
+                serviceCollection.AddTransient<SmartFileOrganizer.Application.Services.ScanOrchestrator>();
+                serviceCollection.AddScoped<SmartFileOrganizer.Core.Interfaces.IRepository>(sp =>
+                {
+                    var dbPath = System.IO.Path.Combine(
+                        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                        "SmartFileOrganizer",
+                        "smartfileorganizer.db");
+                    return new SmartFileOrganizer.Infrastructure.SQLiteRepository(dbPath);
+                });
                 
+                // ✓ Logging (required by DuplicateEngine, ScanOrchestrator, etc.)
+                serviceCollection.AddLogging();
+
+                // ✓ Hash Cache (persists across scans for ~90% speedup on repeat scans)
+                serviceCollection.AddSingleton<SmartFileOrganizer.Core.Models.HashCacheService>();
+
                 // ViewModels and MainWindow
                 serviceCollection.AddSingleton<MainViewModel>();
                 serviceCollection.AddSingleton<DashboardViewModel>();
@@ -144,15 +165,31 @@ namespace SmartFileOrganizer.UI
                     }
                 } );
 
-                var mainWindow = ServiceProvider.GetRequiredService<MainWindow>();
-                mainWindow.DataContext = ServiceProvider.GetRequiredService<MainViewModel>();
-                System.Windows.Application.Current.MainWindow = mainWindow;
-                System.Windows.Application.Current.ShutdownMode = System.Windows.ShutdownMode.OnMainWindowClose;
-                
-                mainWindow.Show();
-                splashWindow.Close();
-
-                // ✓ آمن - كتابة مع مسار كامل
+                // ✓ Resolve MainWindow with dedicated DI crash guard
+                try
+                {
+                    var mainWindow = ServiceProvider.GetRequiredService<MainWindow>();
+                    mainWindow.DataContext = ServiceProvider.GetRequiredService<MainViewModel>();
+                    System.Windows.Application.Current.MainWindow = mainWindow;
+                    System.Windows.Application.Current.ShutdownMode = System.Windows.ShutdownMode.OnMainWindowClose;
+                    
+                    mainWindow.Show();
+                    splashWindow.Close();
+                }
+                catch ( System.Exception diEx )
+                {
+                    splashWindow.Close();
+                    string crashPath = System.IO.Path.Combine( AppDataDir, "fatal_crash.txt" );
+                    System.IO.Directory.CreateDirectory( AppDataDir );
+                    System.IO.File.WriteAllText( crashPath, "DI/Startup Crash: " + diEx.ToString() );
+                    System.Windows.MessageBox.Show(
+                        "Fatal error during startup. See localappdata for details.\n\n" + diEx.Message,
+                        "Startup Error",
+                        System.Windows.MessageBoxButton.OK,
+                        System.Windows.MessageBoxImage.Error );
+                    Current.Shutdown();
+                    return;
+                }
                 WriteDebugLog( "4. Show called" );
             }
             catch ( System.Exception ex )

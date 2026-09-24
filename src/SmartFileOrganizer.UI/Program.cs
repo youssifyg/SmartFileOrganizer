@@ -1,12 +1,11 @@
 using System;
-using System.Windows;
 
 namespace SmartFileOrganizer.UI
 {
-    public static class Program
+    public class Program
     {
         [STAThread]
-        public static void Main(string[] args)
+        public static void Main()
         {
             var app = new App();
             app.InitializeComponent();

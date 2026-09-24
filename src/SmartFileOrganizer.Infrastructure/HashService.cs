@@ -16,7 +16,7 @@ namespace SmartFileOrganizer.Infrastructure
                 if (string.IsNullOrWhiteSpace(filePath))
                     throw new ArgumentException("File path must be provided", nameof(filePath));
 
-                using var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite, bufferSize: 4096, useAsync: true);
+                using var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite, bufferSize: 1048576, useAsync: true);
                 int readSize = Math.Min(chunkSize, (int)stream.Length);
                 var buffer = new byte[readSize];
                 int bytesRead = await stream.ReadAsync(buffer, 0, readSize, cancellationToken);
@@ -45,16 +45,15 @@ namespace SmartFileOrganizer.Infrastructure
             throw new ArgumentException("File path must be provided", nameof(filePath));
 
         using var sha = SHA256.Create();
-        using var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite, bufferSize: 81920, useAsync: true);
+        using var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite, bufferSize: 1048576, useAsync: true);
         // Compute hash by streaming
         var hash = await Task.Run(() =>
         {
-            var buffer = new byte[81920];
+            var buffer = new byte[1048576];
             int read;
             while ((read = stream.Read(buffer, 0, buffer.Length)) > 0)
             {
-                if (cancellationToken.IsCancellationRequested)
-                    break;
+                cancellationToken.ThrowIfCancellationRequested();
                 sha.TransformBlock(buffer, 0, read, null, 0);
             }
             sha.TransformFinalBlock(Array.Empty<byte>(), 0, 0);

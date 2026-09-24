@@ -51,10 +51,12 @@ namespace SmartFileOrganizer.UI.ViewModels
     public class DashboardViewModel : ViewModelBase
     {
         private readonly IFileScanner _fileScanner;
+        private readonly SmartFileOrganizer.Application.Services.ScanOrchestrator _scanOrchestrator;
 
-        public DashboardViewModel( IFileScanner fileScanner )
+        public DashboardViewModel( IFileScanner fileScanner, SmartFileOrganizer.Application.Services.ScanOrchestrator scanOrchestrator )
         {
             _fileScanner = fileScanner;
+            _scanOrchestrator = scanOrchestrator;
             DuplicateFiles = new ObservableCollection<DuplicateItem>();
 
             BrowseScanCommand = new RelayCommand( _ => ExecuteBrowseScan() );
@@ -133,60 +135,65 @@ namespace SmartFileOrganizer.UI.ViewModels
 
             try
             {
-                var allFiles = new List<FileRecord>();
-                await Task.Run( async () =>
+                int duplicateCount = 0;
+                var progress = new Progress<SmartFileOrganizer.Core.Models.ScanProgressReport>(report =>
                 {
-                    int count = 0;
-                    await foreach ( var file in _fileScanner.EnumerateFilesAsync( TargetPath ) )
+                    ProgressText = $"{report.Stage}... {report.FilesAnalyzed}/{report.FilesDiscovered} - {System.IO.Path.GetFileName(report.CurrentFile)}";
+                });
+
+                await Task.Run(async () =>
+                {
+                    int groupId = 1;
+                    
+                    await foreach (var group in _scanOrchestrator.RunAsync(TargetPath, progress))
                     {
-                        allFiles.Add( file );
-                        count++;
-                        if ( count % 100 == 0 )
+                        var batch = new List<DuplicateItem>();
+                        foreach (var file in group.Files)
                         {
-                            // Marshall to UI thread if necessary, though INotifyPropertyChanged 
-                            // typically handles background thread updates for simple strings, 
-                            // but let's safely assign it. WPF handles string binding across threads natively.
-                            ProgressText = $"Scanning: { count } files found...";
+                            string safePath = file.Path ?? string.Empty;
+                            var item = new DuplicateItem
+                            {
+                                GroupId = groupId.ToString(),
+                                FileName = System.IO.Path.GetFileName(safePath),
+                                Path = safePath,
+                                Size = $"{((long?)file.Size).GetValueOrDefault() / 1024.0 / 1024.0:F2} MB",
+                                SizeBytes = ((long?)file.Size).GetValueOrDefault()
+                            };
+                            item.PropertyChanged += (s, e) => {
+                                if (e.PropertyName == nameof(DuplicateItem.IsSelected))
+                                    System.Windows.Application.Current.Dispatcher.InvokeAsync(() => UpdateSelectedCount());
+                            };
+                            batch.Add(item);
                         }
-                    }
-                    ProgressText = $"Finalizing scan of { count } files...";
-                } );
+                        groupId++;
 
-                ScanSessionStore.AllScannedFiles = allFiles;
-
-                var sizeGroups = allFiles.GroupBy( f => f.Size ).Where( g => g.Count() > 1 ).ToList();
-                int groupId = 1;
-                foreach ( var group in sizeGroups )
-                {
-                    foreach ( var file in group )
-                    {
-                        string safePath = file.Path ?? string.Empty;
-                        var item = new DuplicateItem
+                        // Progressively update UI on the Dispatcher thread
+                        await System.Windows.Application.Current.Dispatcher.InvokeAsync(() =>
                         {
-                            GroupId = groupId.ToString(),
-                            FileName = System.IO.Path.GetFileName( safePath ),
-                            Path = safePath,
-                            Size = $"{ file.Size / 1024.0 / 1024.0:F2} MB",
-                            SizeBytes = file.Size
-                        };
-                        item.PropertyChanged += (s, e) => {
-                            if (e.PropertyName == nameof(DuplicateItem.IsSelected))
-                                UpdateSelectedCount();
-                        };
-                        DuplicateFiles.Add( item );
+                            foreach (var item in batch)
+                            {
+                                DuplicateFiles.Add(item);
+                            }
+                            UpdateSelectedCount();
+                            duplicateCount += batch.Count;
+                        });
                     }
-                    groupId++;
-                }
+                });
 
                 ScanSessionStore.AllDuplicates = DuplicateFiles.ToList();
                 UpdateSelectedCount();
                 var title = global::System.Windows.Application.Current.TryFindResource("StrMsgScanCompleteTitle") as string ?? "Scan Complete";
-                var bodyTemplate = global::System.Windows.Application.Current.TryFindResource("StrMsgScanCompleteBody") as string ?? "Scan completed successfully!\nTotal files scanned: {0}\nFound {1} duplicate candidate(s).";
-                MessageBox.Show( string.Format(bodyTemplate, allFiles.Count, DuplicateFiles.Count), title, MessageBoxButton.OK, MessageBoxImage.Information );
+                var bodyTemplate = global::System.Windows.Application.Current.TryFindResource("StrMsgScanCompleteBody") as string ?? "Scan completed successfully!\nFound {0} duplicate(s).";
+                MessageBox.Show( string.Format(bodyTemplate, duplicateCount), title, MessageBoxButton.OK, MessageBoxImage.Information );
             }
-            catch ( Exception ex )
+            catch (Exception ex)
             {
-                MessageBox.Show( $"Scan failed: { ex.Message }" );
+                string logPath = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "SmartFileOrganizer", "scan_error.txt");
+                System.IO.File.WriteAllText(logPath, ex.ToString());
+                System.Windows.Application.Current.Dispatcher.InvokeAsync(() =>
+                {
+                    System.Windows.MessageBox.Show($"Scan failed! Full trace written to: {logPath}\n\n{ex.Message}", "Error", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+                });
             }
             finally
             {

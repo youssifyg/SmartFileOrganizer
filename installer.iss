@@ -1,5 +1,5 @@
 #define MyAppName "File Organizer - Auto Clean & Sort"
-#define MyAppVersion "1.0.0.0"
+#define MyAppVersion "1.0.1.0"
 #define MyAppPublisher "YoussifYG"
 #define MyAppExeName "SmartFileOrganizer.UI.exe"
 #define PublishDir "C:\Users\Youssef\.gemini\antigravity\scratch\SmartFileOrganizer\src\SmartFileOrganizer.UI\bin\Release\net8.0-windows\win-x64\publish"

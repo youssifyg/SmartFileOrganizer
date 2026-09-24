@@ -165,7 +165,7 @@ namespace SmartFileOrganizer.Infrastructure
             var cmd = connection.CreateCommand();
             cmd.CommandText = @"INSERT INTO ScanSessions (StartedAt, CompletedAt) VALUES (@start, @end);";
             cmd.Parameters.AddWithValue("@start", session.StartedAt.ToString("o"));
-            cmd.Parameters.AddWithValue("@end", session.CompletedAt?.ToString("o"));
+            cmd.Parameters.AddWithValue("@end", session.CompletedAt?.ToString("o") ?? (object)DBNull.Value);
             await cmd.ExecuteNonQueryAsync(cancellationToken);
         }
 

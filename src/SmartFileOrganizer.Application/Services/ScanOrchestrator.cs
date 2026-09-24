@@ -39,7 +39,7 @@ namespace SmartFileOrganizer.Application.Services
             _duplicateEngine = duplicateEngine ?? throw new ArgumentNullException(nameof(duplicateEngine));
         }
 
-        public async Task RunAsync(string rootPath, IProgress<ScanProgressReport> progress, CancellationToken cancellationToken)
+        public async IAsyncEnumerable<DuplicateGroup> RunAsync(string rootPath, IProgress<ScanProgressReport>? progress, [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken cancellationToken = default)
         {
             if (string.IsNullOrWhiteSpace(rootPath))
                 throw new ArgumentException("Root path must be provided", nameof(rootPath));
@@ -72,10 +72,13 @@ namespace SmartFileOrganizer.Application.Services
                 });
 
                 var info = new FileInfo(filePath);
+                long safeSize = 0;
+                try { safeSize = info.Length; } catch { } // Protected files throw exception, treated as 0 length
+
                 var record = new FileRecord
                 {
                     Path = filePath,
-                    Size = info.Length,
+                    Size = safeSize,
                     Created = info.CreationTimeUtc,
                     Modified = info.LastWriteTimeUtc
                 };
@@ -110,6 +113,7 @@ namespace SmartFileOrganizer.Application.Services
             foreach (var group in duplicateGroups)
             {
                 await _repository.SaveDuplicateGroupAsync(group, cancellationToken);
+                yield return group;
             }
 
             // Final progress report
