@@ -24,3 +24,10 @@ This project serves as a foundational step into desktop software engineering. Th
 1. **Repository & Build Management:** Overcoming GitHub's 100MB file size limits by correctly configuring `.gitignore` for `.NET` compiled outputs ( bin / obj ) and restructuring the commit history to maintain a clean repository.
 2. **Packaging & Deployment:** Managing the transition from raw compiled binaries to professional installers using Inno Setup and MSIX packaging for Microsoft Store compatibility.
 3. **Algorithmic Efficiency:** Implementing a two-pass hashing mechanism to prevent excessive memory consumption when analyzing large volumes of files.
+
+## Usage
+1. Launch the application.
+2. Click 'Browse' to select a folder to scan.
+3. Click 'Start Scan' to find duplicates.
+4. Review the detected duplicates and select files to remove.
+5. Click 'Delete Selected' to clean up your space.

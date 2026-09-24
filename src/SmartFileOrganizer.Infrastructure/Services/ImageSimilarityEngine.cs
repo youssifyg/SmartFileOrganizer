@@ -3,16 +3,14 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.PixelFormats;
-using SixLabors.ImageSharp.Processing;
+using SkiaSharp;
 using SmartFileOrganizer.Core.Interfaces;
 
 namespace SmartFileOrganizer.Infrastructure.Services
 {
     public class ImageSimilarityEngine : ISimilarityEngine
     {
-        private static readonly string[] _supportedExtensions = new string[] { ".jpg", ".jpeg", ".png", ".bmp", ".gif" };
+        private static readonly string[] _supportedExtensions = new string[] { ".jpg", ".jpeg", ".png", ".bmp", ".gif", ".webp" };
 
         public bool SupportsFileType( string extension )
         {
@@ -49,15 +47,11 @@ namespace SmartFileOrganizer.Infrastructure.Services
             {
                 // Open file with FileShare.Read to avoid locking
                 using var stream = new FileStream( imagePath, FileMode.Open, FileAccess.Read, FileShare.Read );
-                using var image = Image.Load<L8>( stream );
+                using var original = SKBitmap.Decode( stream );
+                if ( original == null ) return 0UL;
 
-                // Downscale to 9x8 for dHash
-                image.Mutate( x => x.Resize( new ResizeOptions
-                {
-                    Size = new Size( 9, 8 ),
-                    Mode = ResizeMode.Stretch,
-                    Sampler = KnownResamplers.Bicubic
-                } ) );
+                using var resized = original.Resize( new SKImageInfo( 9, 8 ), new SKSamplingOptions( SKFilterMode.Linear ) );
+                if ( resized == null ) return 0UL;
 
                 ulong hash = 0;
                 int bitIndex = 0;
@@ -66,11 +60,13 @@ namespace SmartFileOrganizer.Infrastructure.Services
                 {
                     for ( int x = 0; x < 8; x++ )
                     {
-                        // Compare current pixel with the next pixel to the right
-                        byte leftPixel = image[ x, y ].PackedValue;
-                        byte rightPixel = image[ x + 1, y ].PackedValue;
+                        var leftColor = resized.GetPixel( x, y );
+                        var rightColor = resized.GetPixel( x + 1, y );
 
-                        if ( leftPixel > rightPixel )
+                        int leftLuma = ( leftColor.Red * 299 + leftColor.Green * 587 + leftColor.Blue * 114 ) / 1000;
+                        int rightLuma = ( rightColor.Red * 299 + rightColor.Green * 587 + rightColor.Blue * 114 ) / 1000;
+
+                        if ( leftLuma > rightLuma )
                         {
                             hash |= ( 1UL << bitIndex );
                         }

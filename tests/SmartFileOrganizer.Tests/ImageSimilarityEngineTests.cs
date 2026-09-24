@@ -2,9 +2,7 @@ using System;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
-using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.PixelFormats;
-using SixLabors.ImageSharp.Processing;
+using SkiaSharp;
 using SmartFileOrganizer.Infrastructure.Services;
 using Xunit;
 
@@ -30,20 +28,18 @@ namespace SmartFileOrganizer.Tests
             }
         }
 
-        private string CreateMockImage( string name, int width, int height, Rgba32 color )
+        private string CreateMockImage( string name, int width, int height, SKColor color )
         {
             var path = Path.Combine( _tempDir, name );
-            using ( var image = new Image<Rgba32>( width, height, color ) )
+            using ( var image = new SKBitmap( width, height ) )
+            using ( var canvas = new SKCanvas( image ) )
             {
-                // Add some arbitrary shape to make it not just a solid color
-                for ( int y = 0; y < height / 2; y++ )
-                {
-                    for ( int x = 0; x < width / 2; x++ )
-                    {
-                        image[ x, y ] = new Rgba32( 255, 255, 255 );
-                    }
-                }
-                image.SaveAsJpeg( path );
+                canvas.Clear( color );
+                var paint = new SKPaint { Color = SKColors.White };
+                canvas.DrawRect( new SKRect( 0, 0, width / 2, height / 2 ), paint );
+
+                using var fs = new FileStream( path, FileMode.Create );
+                image.Encode( fs, SKEncodedImageFormat.Jpeg, 100 );
             }
             return path;
         }
@@ -51,7 +47,7 @@ namespace SmartFileOrganizer.Tests
         [Fact]
         public async Task CalculateSimilarityAsync_IdenticalImages_ReturnsOne()
         {
-            string imgPath = CreateMockImage( "test1.jpg", 100, 100, new Rgba32( 255, 0, 0 ) );
+            string imgPath = CreateMockImage( "test1.jpg", 100, 100, SKColors.Red );
 
             float similarity = await _engine.CalculateSimilarityAsync( imgPath, imgPath, CancellationToken.None );
 
@@ -61,13 +57,14 @@ namespace SmartFileOrganizer.Tests
         [Fact]
         public async Task CalculateSimilarityAsync_ResizedImage_ReturnsHighSimilarity()
         {
-            string originalPath = CreateMockImage( "orig.jpg", 100, 100, new Rgba32( 0, 255, 0 ) );
+            string originalPath = CreateMockImage( "orig.jpg", 100, 100, SKColors.Green );
             string resizedPath = Path.Combine( _tempDir, "resized.jpg" );
             
-            using ( var image = Image.Load( originalPath ) )
+            using ( var image = SKBitmap.Decode( originalPath ) )
+            using ( var resized = image.Resize( new SKImageInfo( 50, 50 ), new SKSamplingOptions( SKFilterMode.Linear ) ) )
+            using ( var fs = new FileStream( resizedPath, FileMode.Create ) )
             {
-                image.Mutate( x => x.Resize( 50, 50 ) );
-                image.SaveAsJpeg( resizedPath );
+                resized.Encode( fs, SKEncodedImageFormat.Jpeg, 100 );
             }
 
             float similarity = await _engine.CalculateSimilarityAsync( originalPath, resizedPath, CancellationToken.None );
@@ -78,20 +75,19 @@ namespace SmartFileOrganizer.Tests
         [Fact]
         public async Task CalculateSimilarityAsync_DifferentImages_ReturnsLowSimilarity()
         {
-            string img1Path = CreateMockImage( "diff1.jpg", 100, 100, new Rgba32( 255, 0, 0 ) );
-            string img2Path = CreateMockImage( "diff2.jpg", 100, 100, new Rgba32( 0, 0, 255 ) );
+            string img1Path = CreateMockImage( "diff1.jpg", 100, 100, SKColors.Red );
+            string img2Path = CreateMockImage( "diff2.jpg", 100, 100, SKColors.Blue );
 
             // Overwrite img2 to make it completely different visually
-            using ( var image = new Image<Rgba32>( 100, 100, new Rgba32( 0, 0, 255 ) ) )
+            using ( var image = new SKBitmap( 100, 100 ) )
+            using ( var canvas = new SKCanvas( image ) )
             {
-                for ( int y = 50; y < 100; y++ )
-                {
-                    for ( int x = 50; x < 100; x++ )
-                    {
-                        image[ x, y ] = new Rgba32( 0, 0, 0 );
-                    }
-                }
-                image.SaveAsJpeg( img2Path );
+                canvas.Clear( SKColors.Blue );
+                var paint = new SKPaint { Color = SKColors.Black };
+                canvas.DrawRect( new SKRect( 50, 50, 100, 100 ), paint );
+                
+                using var fs = new FileStream( img2Path, FileMode.Create );
+                image.Encode( fs, SKEncodedImageFormat.Jpeg, 100 );
             }
 
             float similarity = await _engine.CalculateSimilarityAsync( img1Path, img2Path, CancellationToken.None );
@@ -102,7 +98,7 @@ namespace SmartFileOrganizer.Tests
         [Fact]
         public async Task CalculateSimilarityAsync_CorruptImage_ReturnsZeroSafely()
         {
-            string imgPath = CreateMockImage( "valid.jpg", 100, 100, new Rgba32( 255, 0, 0 ) );
+            string imgPath = CreateMockImage( "valid.jpg", 100, 100, SKColors.Red );
             string corruptPath = Path.Combine( _tempDir, "corrupt.jpg" );
             
             File.WriteAllText( corruptPath, "Not an image file" );
