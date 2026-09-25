@@ -1,5 +1,18 @@
-﻿<Window x:Class="SmartFileOrganizer.UI.Views.SplashWindow" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" Title="SplashWindow" Height="500" Width="700" WindowStyle="None" WindowStartupLocation="CenterScreen" AllowsTransparency="True" Background="Transparent" Topmost="True" ShowInTaskbar="False">
-<Grid Background="Transparent">
-<Image Source="/Assets/Branding/SmartFileOrganizer-Logo.png" Stretch="Uniform" MaxWidth="350" MaxHeight="350" HorizontalAlignment="Center" VerticalAlignment="Center" />
-</Grid>
+<Window x:Class="SmartFileOrganizer.UI.Views.SplashWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        WindowStyle="None"
+        AllowsTransparency="True"
+        Background="Transparent"
+        WindowStartupLocation="CenterScreen"
+        ShowInTaskbar="False"
+        Width="380"
+        Height="380">
+    <Grid HorizontalAlignment="Center" VerticalAlignment="Center">
+        <Image Source="pack://application:,,,/Assets/Branding/SmartFileOrganizer-Logo.png"
+               Width="300"
+               Height="300"
+               Stretch="Uniform"
+               RenderOptions.BitmapScalingMode="HighQuality"/>
+    </Grid>
 </Window>

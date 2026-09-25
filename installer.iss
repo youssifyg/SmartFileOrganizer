@@ -2,7 +2,7 @@
 #define MyAppVersion "1.0.1.0"
 #define MyAppPublisher "YoussifYG"
 #define MyAppExeName "SmartFileOrganizer.UI.exe"
-#define PublishDir "C:\Users\Youssef\.gemini\antigravity\scratch\SmartFileOrganizer\publish_final"
+#define PublishDir "C:\Users\Youssef\.gemini\antigravity\scratch\SmartFileOrganizer\publish_msix_final"
 
 [Setup]
 AppId={{D3E8E421-44B6-4B11-8A4E-7BC188F35DE2}
@@ -21,7 +21,6 @@ CloseApplications=yes
 UsedUserAreasWarning=no
 
 [Files]
-Source: "{#PublishDir}\{#MyAppExeName}"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#PublishDir}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 [Icons]

@@ -42,6 +42,13 @@ namespace SmartFileOrganizer.UI
             base.OnStartup(e);
             try
             {
+                // 1. Show Splash
+                var splash = new Views.SplashWindow();
+                splash.Show();
+
+                // 2. Start mandatory delay and initialize backend
+                var minimumDelay = System.Threading.Tasks.Task.Delay(2500);
+
                 // ==== DI container build (unchanged) ==== //
                 var serviceCollection = new ServiceCollection();
                 System.IO.Directory.CreateDirectory(AppDataDir);
@@ -119,11 +126,14 @@ namespace SmartFileOrganizer.UI
                 await repo.InitializeAsync();
 
                 // ==== Resolve and show MainWindow via DI ==== //
+                await minimumDelay;
+
                 var mainWindow = ServiceProvider.GetRequiredService<MainWindow>();
                 mainWindow.DataContext = ServiceProvider.GetRequiredService<MainViewModel>();
                 System.Windows.Application.Current.MainWindow = mainWindow;
                 System.Windows.Application.Current.ShutdownMode = ShutdownMode.OnMainWindowClose;
                 mainWindow.Show();
+                splash.Close();
             }
             catch (Exception ex)
             {
