@@ -38,7 +38,7 @@ namespace SmartFileOrganizer.Tests
             };
 
             var hashService = new HashService();
-            var engine = new DuplicateEngine(hashService);
+            var engine = new DuplicateEngine(hashService, new Microsoft.Extensions.Logging.Abstractions.NullLogger<DuplicateEngine>(), new Core.Models.HashCacheService());
             var result = await engine.DetectDuplicatesAsync(records);
 
             Assert.Empty(result);
@@ -58,7 +58,7 @@ namespace SmartFileOrganizer.Tests
             };
 
             var hashService = new HashService();
-            var engine = new DuplicateEngine(hashService);
+            var engine = new DuplicateEngine(hashService, new Microsoft.Extensions.Logging.Abstractions.NullLogger<DuplicateEngine>(), new Core.Models.HashCacheService());
             var result = await engine.DetectDuplicatesAsync(records);
 
             Assert.Single(result);

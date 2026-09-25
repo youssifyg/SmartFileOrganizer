@@ -9,6 +9,7 @@
     <UseWindowsForms>true</UseWindowsForms>
     <DisableImplicitNamespaceImports_WindowsForms>true</DisableImplicitNamespaceImports_WindowsForms>
     <ApplicationIcon>Assets\Branding\SmartFileOrganizer.ico</ApplicationIcon>
+    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\\..\\src\\SmartFileOrganizer.Application\\SmartFileOrganizer.Application.csproj" />

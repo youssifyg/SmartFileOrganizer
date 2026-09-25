@@ -150,6 +150,7 @@ namespace SmartFileOrganizer.UI.Views
 
                 // Apply theme and language immediately
                 ThemeManager.ApplyThemeAndLanguage(settings.Theme, settings.Language);
+                SmartFileOrganizer.Core.Events.GlobalEvents.OnLanguageChanged?.Invoke();
 
                 var msgBody = global::System.Windows.Application.Current.TryFindResource("StrMsgSettingsSavedBody") as string ?? "Settings saved successfully!";
                 var msgTitle = global::System.Windows.Application.Current.TryFindResource("StrMsgSettingsSavedTitle") as string ?? "Settings";
@@ -174,13 +175,6 @@ namespace SmartFileOrganizer.UI.Views
                 collection.Remove(selected);
         }
 
-        public void ClearHistory_Click(object sender, RoutedEventArgs e)
-        {
-            var msgBody = global::System.Windows.Application.Current.TryFindResource("StrMsgHistoryClearedBody") as string ?? "History cleared successfully!";
-            var msgTitle = global::System.Windows.Application.Current.TryFindResource("StrMsgHistoryClearedTitle") as string ?? "Maintenance";
-            MessageBox.Show(msgBody, msgTitle, MessageBoxButton.OK, MessageBoxImage.Information);
-        }
-
         public async void ResetDefaults_Click(object sender, RoutedEventArgs e)
         {
             var confirmMsg = global::System.Windows.Application.Current.Resources["StrConfirmReset"] as string
@@ -203,6 +197,7 @@ namespace SmartFileOrganizer.UI.Views
 
                 SmartFileOrganizer.UI.Themes.ThemeManager.ApplyThemeAndLanguage(
                     newSettings.Theme, newSettings.Language );
+                SmartFileOrganizer.Core.Events.GlobalEvents.OnLanguageChanged?.Invoke();
             }
         }
     }

@@ -94,6 +94,11 @@ namespace SmartFileOrganizer.UI
             await System.Threading.Tasks.Task.Yield();
             
             var sp = ( ( SmartFileOrganizer.UI.App )System.Windows.Application.Current ).ServiceProvider;
+
+            // Force database initialization explicitly on startup
+            var repository = sp.GetRequiredService<IRepository>();
+            await repository.InitializeAsync();
+
             var mainVm = (MainViewModel)DataContext;
             mainVm.CurrentViewModel = sp.GetRequiredService<DashboardViewModel>();
             ResetButtonColors();

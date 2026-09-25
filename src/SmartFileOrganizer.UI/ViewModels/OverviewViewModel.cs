@@ -11,6 +11,7 @@ namespace SmartFileOrganizer.UI.ViewModels
     {
         private readonly ITempCleanupService _tempCleanupService;
         private readonly IDriveRelocationService _driveRelocationService;
+        private readonly IRepository _repository;
         private readonly System.Collections.Generic.List<OverviewItemModel> _activeSourceFiles = new();
 
         public class OverviewItemModel
@@ -20,10 +21,11 @@ namespace SmartFileOrganizer.UI.ViewModels
             public string Category { get; set; } = string.Empty;
         }
 
-        public OverviewViewModel( ITempCleanupService tempCleanupService, IDriveRelocationService driveRelocationService )
+        public OverviewViewModel( ITempCleanupService tempCleanupService, IDriveRelocationService driveRelocationService, IRepository repository )
         {
             _tempCleanupService = tempCleanupService;
             _driveRelocationService = driveRelocationService;
+            _repository = repository;
 
             CleanTempCommand = new RelayCommand( async _ => await ExecuteCleanTempAsync() );
             BrowseSourceCommand = new RelayCommand( _ => ExecuteBrowseSource() );
@@ -33,11 +35,30 @@ namespace SmartFileOrganizer.UI.ViewModels
             OpenDuplicatesCommand = new RelayCommand( _ => ExecuteOpenDuplicates() );
             BackToCardsCommand = new RelayCommand( _ => ExecuteBackToCards() );
             FilterCommand = new RelayCommand( param => ExecuteFilter( param as string ) );
+
+            SmartFileOrganizer.Core.Events.GlobalEvents.OnLanguageChanged += () =>
+            {
+                System.Windows.Application.Current.Dispatcher.BeginInvoke(new Action(() =>
+                {
+                    TempCleanupResult = string.Empty;
+                }));
+            };
         }
 
         // --- Summary Cards ---
-        public int TotalScannedFiles => ScanSessionStore.TotalScannedFiles;
-        public int TotalDuplicatesFound => ScanSessionStore.TotalDuplicatesFound;
+        private int _totalScannedFiles;
+        public int TotalScannedFiles
+        {
+            get => _totalScannedFiles;
+            set => SetProperty( ref _totalScannedFiles, value );
+        }
+
+        private int _duplicatesFound;
+        public int DuplicatesFound
+        {
+            get => _duplicatesFound;
+            set => SetProperty( ref _duplicatesFound, value );
+        }
 
         // --- State Visibility ---
         private System.Windows.Visibility _cardsViewVisibility = System.Windows.Visibility.Visible;
@@ -130,14 +151,23 @@ namespace SmartFileOrganizer.UI.ViewModels
 
         public void UpdateCards()
         {
-            _ = UpdateCardsAsync();
+            _ = LoadStatisticsAsync();
         }
 
-        private async Task UpdateCardsAsync()
+        public async Task LoadStatisticsAsync()
         {
-            await Task.Yield();
-            OnPropertyChanged( nameof( TotalScannedFiles ) );
-            OnPropertyChanged( nameof( TotalDuplicatesFound ) );
+            try
+            {
+                var sessions = await _repository.GetScanSessionsAsync();
+                var groups = await _repository.GetDuplicateGroupsAsync();
+                TotalScannedFiles = sessions.Sum(s => s.FilesDiscovered);
+                DuplicatesFound = groups.Sum(g => g.Files.Count);
+            }
+            catch
+            {
+                TotalScannedFiles = 0;
+                DuplicatesFound = 0;
+            }
         }
 
         public System.Collections.ObjectModel.ObservableCollection<object> FilteredFiles { get; } = new System.Collections.ObjectModel.ObservableCollection<object>();
@@ -145,9 +175,7 @@ namespace SmartFileOrganizer.UI.ViewModels
         // Ensure we can notify when summary changes (call this from scanner or when navigating)
         public async Task RefreshSummary()
         {
-            await Task.Yield();
-            OnPropertyChanged( nameof( TotalScannedFiles ) );
-            OnPropertyChanged( nameof( TotalDuplicatesFound ) );
+            await LoadStatisticsAsync();
         }
 
         // --- Temp Cleanup ---
@@ -165,8 +193,8 @@ namespace SmartFileOrganizer.UI.ViewModels
             {
                 TempCleanupResult = "Cleaning temp files...";
                 var summary = await _tempCleanupService.CleanAsync();
-                var msgTemplate = global::System.Windows.Application.Current.TryFindResource("StrMsgCleanupResult") as string ?? "Deleted {0} files ({1} bytes). Skipped {2} files.";
-                TempCleanupResult = string.Format(msgTemplate, summary.FilesDeleted, summary.BytesDeleted, summary.FilesSkipped);
+                var format = global::System.Windows.Application.Current.Resources["TempCleanupResult"] as string ?? "Deleted {0} files ({1} bytes). Skipped {2} files.";
+                TempCleanupResult = string.Format(format, summary.FilesDeleted, summary.BytesDeleted, summary.FilesSkipped);
             }
             catch ( Exception ex )
             {

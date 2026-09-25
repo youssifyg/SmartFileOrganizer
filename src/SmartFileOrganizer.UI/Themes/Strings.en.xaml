@@ -108,4 +108,11 @@
     <system:String x:Key="StrMsgRelocationResult">Relocated {0} files ({1} bytes). Skipped {2} files.</system:String>
     <system:String x:Key="StrLabelSelectedItemsCount">{0} items</system:String>
     <FlowDirection x:Key="AppFlowDirection">LeftToRight</FlowDirection>
+    <system:String x:Key="StrSmartSelect">Smart Select</system:String>
+    <system:String x:Key="StrSmartSelectPreference">Smart Select Preference</system:String>
+    <system:String x:Key="StrKeepOldest">Keep Oldest File</system:String>
+    <system:String x:Key="StrKeepNewest">Keep Newest File</system:String>
+<system:String x:Key="StrHistoryClearedTitle">History Cleared</system:String>
+<system:String x:Key="StrHistoryClearedMsg">All scanning history and statistics are permanently cleared.</system:String>
+<system:String x:Key="TempCleanupResult">Deleted {0} files ({1} bytes). Skipped {2} files.</system:String>
 </ResourceDictionary>

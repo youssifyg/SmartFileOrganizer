@@ -1,0 +1,1 @@
+namespace SmartFileOrganizer.Core.Models { public enum SmartSelectionMode { KeepOldest, KeepNewest } }

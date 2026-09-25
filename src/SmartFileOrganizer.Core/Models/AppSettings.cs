@@ -36,5 +36,6 @@ namespace SmartFileOrganizer.Core.Models
         public float ImageSimilarityThreshold { get; set; } = 0.90f;
         public List<string> ExcludedDirectories { get; set; } = new List<string>();
         public bool DarkMode { get; set; } = true;
+        public SmartSelectionMode SmartSelectionMode { get; set; } = SmartSelectionMode.KeepOldest;
     }
 }

@@ -14,10 +14,7 @@
                 
                 <StackPanel Margin="0,0,0,20">
                     <UniformGrid Columns="2">
-                        <Border Background="{DynamicResource CardBackground1}" CornerRadius="8" Height="120" Margin="15" Cursor="Hand">
-                            <Border.InputBindings>
-                                <MouseBinding Gesture="LeftClick" Command="{ Binding OpenScannedFilesCommand }" />
-                            </Border.InputBindings>
+                        <Border Background="{DynamicResource CardBackground1}" CornerRadius="8" Height="120" Margin="15">
                             <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
                                 <TextBlock FontSize="16" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center" Text="{DynamicResource StrCardTotalScanned}"/>
                                 <TextBlock FontSize="30" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center" Margin="0,10,0,0" Text="{ Binding TotalScannedFiles }" />
@@ -29,7 +26,7 @@
                             </Border.InputBindings>
                             <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
                                 <TextBlock FontSize="16" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center" Text="{DynamicResource StrCardDuplicatesFound}"/>
-                                <TextBlock FontSize="30" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center" Margin="0,10,0,0" Text="{ Binding TotalDuplicatesFound }" />
+                                <TextBlock FontSize="30" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center" Margin="0,10,0,0" Text="{Binding DuplicatesFound}" />
                             </StackPanel>
                         </Border>
                     </UniformGrid>

@@ -48,10 +48,10 @@ namespace SmartFileOrganizer.Infrastructure.Services
                 // Open file with FileShare.Read to avoid locking
                 using var stream = new FileStream( imagePath, FileMode.Open, FileAccess.Read, FileShare.Read );
                 using var original = SKBitmap.Decode( stream );
-                if ( original == null ) return 0UL;
+                if ( original == null ) throw new InvalidDataException("Invalid or corrupt image");
 
                 using var resized = original.Resize( new SKImageInfo( 9, 8 ), new SKSamplingOptions( SKFilterMode.Linear ) );
-                if ( resized == null ) return 0UL;
+                if ( resized == null ) throw new InvalidDataException("Failed to resize image");
 
                 ulong hash = 0;
                 int bitIndex = 0;

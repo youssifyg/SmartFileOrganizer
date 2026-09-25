@@ -2,7 +2,7 @@
 #define MyAppVersion "1.0.1.0"
 #define MyAppPublisher "YoussifYG"
 #define MyAppExeName "SmartFileOrganizer.UI.exe"
-#define PublishDir "C:\Users\Youssef\.gemini\antigravity\scratch\SmartFileOrganizer\src\SmartFileOrganizer.UI\bin\Release\net8.0-windows\win-x64\publish"
+#define PublishDir "C:\Users\Youssef\.gemini\antigravity\scratch\SmartFileOrganizer\publish_final"
 
 [Setup]
 AppId={{D3E8E421-44B6-4B11-8A4E-7BC188F35DE2}
@@ -12,7 +12,7 @@ AppPublisher={#MyAppPublisher}
 DefaultDirName={autopf}\SmartFileOrganizer
 DefaultGroupName={#MyAppName}
 OutputDir=D:\Work
-OutputBaseFilename=SmartFileOrganizer_Setup
+OutputBaseFilename=SmartFileOrganizer_Setup_v1.0.1.0
 Compression=lzma
 SolidCompression=yes
 WizardStyle=modern

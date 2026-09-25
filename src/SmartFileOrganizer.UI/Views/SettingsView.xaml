@@ -63,7 +63,7 @@
                 <TextBlock FontSize="15" FontWeight="Bold" Foreground="{DynamicResource PrimaryText}" Margin="0,0,0,8" Text="{DynamicResource StrSectionScanPerfVisibility}"/>
                 <CheckBox Content="{DynamicResource StrCheckIncludeHidden}" Margin="0,0,0,8" x:Name="IncludeHiddenCheck" Foreground="{DynamicResource PrimaryText}"/>
                 <CheckBox Content="{DynamicResource StrCheckIncludeSystem}" Margin="0,0,0,12" x:Name="IncludeSystemCheck" Foreground="{DynamicResource PrimaryText}"/>
-                <StackPanel Margin="0,0,0,20" Orientation="Horizontal">
+                <StackPanel Margin="0,0,0,12" Orientation="Horizontal">
                     <TextBlock Text="{DynamicResource StrLabelParallelismLevel}" Foreground="{DynamicResource PrimaryText}" VerticalAlignment="Center" Width="160"/>
                     <ComboBox Background="{DynamicResource ControlBackground}" Foreground="#2C3E50" BorderBrush="{DynamicResource ControlBorder}" Height="26" Width="150" x:Name="ParallelismComboBox">
                         <ComboBoxItem Foreground="#2C3E50" Content="{DynamicResource StrParallelismSlow}"/>
@@ -71,6 +71,11 @@
                         <ComboBoxItem Foreground="#2C3E50" Content="{DynamicResource StrParallelismFast}"/>
                     </ComboBox>
                 </StackPanel>
+                <TextBlock FontWeight="SemiBold" Margin="0,15,0,5" Text="{DynamicResource StrSmartSelectPreference}" Foreground="{DynamicResource PrimaryText}"/>
+                <ComboBox HorizontalAlignment="Left" SelectedIndex="{Binding SmartSelectionMode}" Background="{DynamicResource ControlBackground}" Foreground="#2C3E50" BorderBrush="{DynamicResource ControlBorder}" Height="26" Width="250">
+                    <ComboBoxItem Foreground="#2C3E50" Content="{DynamicResource StrKeepOldest}"/>
+                    <ComboBoxItem Foreground="#2C3E50" Content="{DynamicResource StrKeepNewest}"/>
+                </ComboBox>
 
                 <!-- Category Extension Mapping -->
                 <TextBlock FontSize="15" FontWeight="Bold" Foreground="{DynamicResource PrimaryText}" Margin="0,0,0,8" Text="{DynamicResource StrSectionCategoryMap}"/>
@@ -110,7 +115,7 @@
                         <TextBox Background="{DynamicResource ControlBackground}" Foreground="{DynamicResource InputText}" BorderBrush="{DynamicResource ControlBorder}" Height="26" Padding="4" Width="120" x:Name="HistoryDaysBox" Text="{Binding Settings.HistoryRetentionDays}"/>
                         <TextBlock Text="{DynamicResource StrHistoryNote}" Foreground="{DynamicResource SecondaryText}" Margin="10,0,0,0" VerticalAlignment="Center"/>
                     </StackPanel>
-                    <Button Background="{DynamicResource ControlBackground}" Foreground="{DynamicResource PrimaryText}" BorderBrush="{DynamicResource ControlBorder}" Content="{DynamicResource StrClearHistory}" Height="26" Width="140" Margin="0,5,0,0" Click="ClearHistory_Click"/>
+                    <Button Background="{DynamicResource ControlBackground}" Foreground="{DynamicResource PrimaryText}" BorderBrush="{DynamicResource ControlBorder}" Content="{DynamicResource StrClearHistory}" Height="26" Width="140" Margin="0,5,0,0" Command="{Binding ClearHistoryCommand}"/>
                     <Button Background="{DynamicResource ControlBackground}" Foreground="{DynamicResource PrimaryText}" BorderBrush="{DynamicResource ControlBorder}" Content="{DynamicResource StrResetDefaults}" Height="26" Width="140" Margin="0,5,0,0" Click="ResetDefaults_Click"/>
                 </StackPanel>
 

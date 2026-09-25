@@ -47,7 +47,7 @@ namespace SmartFileOrganizer.Infrastructure
                 @"CREATE TABLE IF NOT EXISTS FileRecords (Id INTEGER PRIMARY KEY AUTOINCREMENT, Path TEXT NOT NULL, Size INTEGER NOT NULL, Created TEXT NOT NULL, Modified TEXT NOT NULL);",
                 @"CREATE TABLE IF NOT EXISTS DuplicateGroups (Id INTEGER PRIMARY KEY AUTOINCREMENT, TotalSize INTEGER NOT NULL, RecoverableSize INTEGER NOT NULL);",
                 @"CREATE TABLE IF NOT EXISTS DuplicateGroupFiles (GroupId INTEGER NOT NULL, Path TEXT NOT NULL, FOREIGN KEY(GroupId) REFERENCES DuplicateGroups(Id));",
-                @"CREATE TABLE IF NOT EXISTS ScanSessions (Id INTEGER PRIMARY KEY AUTOINCREMENT, StartedAt TEXT NOT NULL, CompletedAt TEXT);",
+                @"CREATE TABLE IF NOT EXISTS ScanSessions (Id INTEGER PRIMARY KEY AUTOINCREMENT, StartedAt TEXT NOT NULL, CompletedAt TEXT, FilesDiscovered INTEGER NOT NULL DEFAULT 0);",
                 @"CREATE TABLE IF NOT EXISTS HashCaches (Id INTEGER PRIMARY KEY AUTOINCREMENT, Path TEXT NOT NULL, Size INTEGER NOT NULL, LastModified TEXT NOT NULL, PartialHash BLOB, FullHash BLOB, UNIQUE(Path, Size, LastModified));",
                 @"CREATE TABLE IF NOT EXISTS OperationHistories (Id INTEGER PRIMARY KEY AUTOINCREMENT, Action TEXT NOT NULL, FilePath TEXT NOT NULL, Timestamp TEXT NOT NULL, Size INTEGER NOT NULL);"
             };
@@ -57,6 +57,31 @@ namespace SmartFileOrganizer.Infrastructure
                 var cmd = connection.CreateCommand();
                 cmd.CommandText = stmt;
                 await cmd.ExecuteNonQueryAsync(cancellationToken);
+            }
+
+            using (var checkCmd = connection.CreateCommand())
+            {
+                checkCmd.CommandText = "PRAGMA table_info(ScanSessions);";
+                bool hasColumn = false;
+                using (var reader = await checkCmd.ExecuteReaderAsync(cancellationToken))
+                {
+                    while (await reader.ReadAsync(cancellationToken))
+                    {
+                        if (reader.GetString(1).Equals("FilesDiscovered", StringComparison.OrdinalIgnoreCase))
+                        {
+                            hasColumn = true;
+                            break;
+                        }
+                    }
+                }
+                if (!hasColumn)
+                {
+                    using (var alterCmd = connection.CreateCommand())
+                    {
+                        alterCmd.CommandText = "ALTER TABLE ScanSessions ADD COLUMN FilesDiscovered INTEGER NOT NULL DEFAULT 0;";
+                        await alterCmd.ExecuteNonQueryAsync(cancellationToken);
+                    }
+                }
             }
         }
 
@@ -163,9 +188,10 @@ namespace SmartFileOrganizer.Infrastructure
             await using var connection = new SqliteConnection(_connectionString);
             await connection.OpenAsync(cancellationToken);
             var cmd = connection.CreateCommand();
-            cmd.CommandText = @"INSERT INTO ScanSessions (StartedAt, CompletedAt) VALUES (@start, @end);";
+            cmd.CommandText = @"INSERT INTO ScanSessions (StartedAt, CompletedAt, FilesDiscovered) VALUES (@start, @end, @files);";
             cmd.Parameters.AddWithValue("@start", session.StartedAt.ToString("o"));
-            cmd.Parameters.AddWithValue("@end", session.CompletedAt?.ToString("o") ?? (object)DBNull.Value);
+            cmd.Parameters.AddWithValue("@end", session.CompletedAt?.ToString("o") ?? "");
+            cmd.Parameters.AddWithValue("@files", session.FilesDiscovered);
             await cmd.ExecuteNonQueryAsync(cancellationToken);
         }
 
@@ -174,7 +200,7 @@ namespace SmartFileOrganizer.Infrastructure
             await using var connection = new SqliteConnection(_connectionString);
             await connection.OpenAsync(cancellationToken);
             var cmd = connection.CreateCommand();
-            cmd.CommandText = "SELECT Id, StartedAt, CompletedAt FROM ScanSessions ORDER BY Id DESC LIMIT 1;";
+            cmd.CommandText = "SELECT Id, StartedAt, CompletedAt, FilesDiscovered FROM ScanSessions ORDER BY Id DESC LIMIT 1;";
             await using var reader = await cmd.ExecuteReaderAsync(cancellationToken);
             if (await reader.ReadAsync(cancellationToken))
             {
@@ -182,10 +208,32 @@ namespace SmartFileOrganizer.Infrastructure
                 {
                     Id = (int)reader.GetInt64(0),
                     StartedAt = DateTime.Parse(reader.GetString(1), null, System.Globalization.DateTimeStyles.RoundtripKind),
-                    CompletedAt = string.IsNullOrEmpty(reader.GetString(2)) ? (DateTime?)null : DateTime.Parse(reader.GetString(2), null, System.Globalization.DateTimeStyles.RoundtripKind)
+                    CompletedAt = string.IsNullOrEmpty(reader.GetString(2)) ? (DateTime?)null : DateTime.Parse(reader.GetString(2), null, System.Globalization.DateTimeStyles.RoundtripKind),
+                    FilesDiscovered = (int)reader.GetInt64(3)
                 };
             }
             return null;
+        }
+
+        public async Task<IReadOnlyList<ScanSession>> GetScanSessionsAsync(CancellationToken cancellationToken = default)
+        {
+            await using var connection = new SqliteConnection(_connectionString);
+            await connection.OpenAsync(cancellationToken);
+            var cmd = connection.CreateCommand();
+            cmd.CommandText = "SELECT Id, StartedAt, CompletedAt, FilesDiscovered FROM ScanSessions;";
+            await using var reader = await cmd.ExecuteReaderAsync(cancellationToken);
+            var sessions = new List<ScanSession>();
+            while (await reader.ReadAsync(cancellationToken))
+            {
+                sessions.Add(new ScanSession
+                {
+                    Id = (int)reader.GetInt64(0),
+                    StartedAt = DateTime.Parse(reader.GetString(1), null, System.Globalization.DateTimeStyles.RoundtripKind),
+                    CompletedAt = string.IsNullOrEmpty(reader.GetString(2)) ? (DateTime?)null : DateTime.Parse(reader.GetString(2), null, System.Globalization.DateTimeStyles.RoundtripKind),
+                    FilesDiscovered = (int)reader.GetInt64(3)
+                });
+            }
+            return sessions;
         }
 
         public async Task SaveHashCacheAsync(HashCache cache, CancellationToken cancellationToken = default)
@@ -264,6 +312,34 @@ namespace SmartFileOrganizer.Infrastructure
                 });
             }
             return list;
+        }
+
+        public async Task DeleteFileRecordAsync(string filePath, CancellationToken cancellationToken = default)
+        {
+            await using var connection = new SqliteConnection(_connectionString);
+            await connection.OpenAsync(cancellationToken);
+            var cmd = connection.CreateCommand();
+            cmd.CommandText = "DELETE FROM FileRecords WHERE Path = @path;";
+            cmd.Parameters.AddWithValue("@path", filePath);
+            await cmd.ExecuteNonQueryAsync(cancellationToken);
+        }
+
+        public async Task ClearAllDataAsync()
+        {
+            await using var connection = new SqliteConnection(_connectionString);
+            await connection.OpenAsync();
+            using var cmd = connection.CreateCommand();
+            cmd.CommandText = "DELETE FROM ScanSessions; DELETE FROM DuplicateGroupFiles; DELETE FROM DuplicateGroups; DELETE FROM OperationHistories;";
+            await cmd.ExecuteNonQueryAsync();
+        }
+
+        public async Task ClearDuplicatesAsync()
+        {
+            await using var connection = new SqliteConnection(_connectionString);
+            await connection.OpenAsync();
+            using var cmd = connection.CreateCommand();
+            cmd.CommandText = "DELETE FROM DuplicateGroupFiles; DELETE FROM DuplicateGroups;";
+            await cmd.ExecuteNonQueryAsync();
         }
     }
 }

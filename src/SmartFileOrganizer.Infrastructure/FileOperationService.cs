@@ -42,5 +42,25 @@ namespace SmartFileOrganizer.Infrastructure
             };
             await _repository.SaveOperationHistoryAsync(entry, cancellationToken);
         }
+
+        public Task<bool> MoveToRecycleBinAsync(string filePath)
+        {
+            return Task.Run(() =>
+            {
+                try
+                {
+                    if (File.Exists(filePath))
+                    {
+                        FileSystem.DeleteFile(filePath, UIOption.OnlyErrorDialogs, RecycleOption.SendToRecycleBin);
+                        return true;
+                    }
+                    return false;
+                }
+                catch (Exception)
+                {
+                    return false;
+                }
+            });
+        }
     }
 }

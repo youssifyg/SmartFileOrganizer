@@ -52,20 +52,32 @@ namespace SmartFileOrganizer.UI.ViewModels
     {
         private readonly IFileScanner _fileScanner;
         private readonly SmartFileOrganizer.Application.Services.ScanOrchestrator _scanOrchestrator;
+        private readonly SmartFileOrganizer.Core.Interfaces.IFileOperationService _fileOperationService;
+        private readonly SmartFileOrganizer.Core.Interfaces.IRepository _repository;
+        private readonly SmartFileOrganizer.Core.Interfaces.ISettingsService _settingsService;
 
-        public DashboardViewModel( IFileScanner fileScanner, SmartFileOrganizer.Application.Services.ScanOrchestrator scanOrchestrator )
+        public DashboardViewModel( IFileScanner fileScanner, 
+            SmartFileOrganizer.Application.Services.ScanOrchestrator scanOrchestrator,
+            SmartFileOrganizer.Core.Interfaces.IFileOperationService fileOperationService,
+            SmartFileOrganizer.Core.Interfaces.IRepository repository,
+            SmartFileOrganizer.Core.Interfaces.ISettingsService settingsService )
         {
             _fileScanner = fileScanner;
             _scanOrchestrator = scanOrchestrator;
+            _fileOperationService = fileOperationService;
+            _repository = repository;
+            _settingsService = settingsService;
             DuplicateFiles = new ObservableCollection<DuplicateItem>();
 
             BrowseScanCommand = new RelayCommand( _ => ExecuteBrowseScan() );
             StartScanCommand = new RelayCommand( async _ => await ExecuteStartScanAsync() );
             ResetScanCommand = new RelayCommand( _ => ExecuteResetScan() );
             OpenLocationCommand = new RelayCommand( _ => ExecuteOpenLocation() );
-            RecycleBinCommand = new RelayCommand( _ => ExecuteRecycleBin() );
+            RecycleBinCommand = new RelayCommand( async _ => await ExecuteRecycleBinAsync() );
+            SmartSelectCommand = new RelayCommand( _ => ExecuteSmartSelect() );
         }
 
+        public ICommand SmartSelectCommand { get; }
         public ObservableCollection<DuplicateItem> DuplicateFiles { get; }
 
         private string _targetPath = string.Empty;
@@ -126,6 +138,9 @@ namespace SmartFileOrganizer.UI.ViewModels
                 return;
             }
 
+            // Clear previous duplicate data so the new scan starts fresh
+            await _repository.ClearDuplicatesAsync();
+
             DuplicateFiles.Clear();
             UpdateSelectedCount();
             ScanSessionStore.AllScannedFiles.Clear();
@@ -136,8 +151,10 @@ namespace SmartFileOrganizer.UI.ViewModels
             try
             {
                 int duplicateCount = 0;
+                int totalScanned = 0;
                 var progress = new Progress<SmartFileOrganizer.Core.Models.ScanProgressReport>(report =>
                 {
+                    totalScanned = report.FilesDiscovered; // or FilesAnalyzed
                     ProgressText = $"{report.Stage}... {report.FilesAnalyzed}/{report.FilesDiscovered} - {System.IO.Path.GetFileName(report.CurrentFile)}";
                 });
 
@@ -156,7 +173,7 @@ namespace SmartFileOrganizer.UI.ViewModels
                                 GroupId = groupId.ToString(),
                                 FileName = System.IO.Path.GetFileName(safePath),
                                 Path = safePath,
-                                Size = $"{((long?)file.Size).GetValueOrDefault() / 1024.0 / 1024.0:F2} MB",
+                                Size = FormatSize(((long?)file.Size).GetValueOrDefault()),
                                 SizeBytes = ((long?)file.Size).GetValueOrDefault()
                             };
                             item.PropertyChanged += (s, e) => {
@@ -182,9 +199,18 @@ namespace SmartFileOrganizer.UI.ViewModels
 
                 ScanSessionStore.AllDuplicates = DuplicateFiles.ToList();
                 UpdateSelectedCount();
+
+                var currentSession = new SmartFileOrganizer.Core.Models.ScanSession
+                {
+                    StartedAt = DateTime.UtcNow,
+                    CompletedAt = DateTime.UtcNow,
+                    FilesDiscovered = totalScanned
+                };
+                await _repository.SaveScanSessionAsync(currentSession);
+
                 var title = global::System.Windows.Application.Current.TryFindResource("StrMsgScanCompleteTitle") as string ?? "Scan Complete";
                 var bodyTemplate = global::System.Windows.Application.Current.TryFindResource("StrMsgScanCompleteBody") as string ?? "Scan completed successfully!\nFound {0} duplicate(s).";
-                MessageBox.Show( string.Format(bodyTemplate, duplicateCount), title, MessageBoxButton.OK, MessageBoxImage.Information );
+                MessageBox.Show( string.Format(bodyTemplate, totalScanned, duplicateCount), title, MessageBoxButton.OK, MessageBoxImage.Information );
             }
             catch (Exception ex)
             {
@@ -231,7 +257,7 @@ namespace SmartFileOrganizer.UI.ViewModels
             }
         }
 
-        private void ExecuteRecycleBin()
+        private async Task ExecuteRecycleBinAsync()
         {
             var selectedItems = DuplicateFiles.Where( x => x.IsSelected ).ToList();
             if ( selectedItems.Count == 0 )
@@ -255,11 +281,16 @@ namespace SmartFileOrganizer.UI.ViewModels
                     {
                         if ( !string.IsNullOrEmpty( item.Path ) && File.Exists( item.Path ) )
                         {
-                            Microsoft.VisualBasic.FileIO.FileSystem.DeleteFile(
-                                item.Path,
-                                Microsoft.VisualBasic.FileIO.UIOption.OnlyErrorDialogs,
-                                Microsoft.VisualBasic.FileIO.RecycleOption.SendToRecycleBin );
-                            DuplicateFiles.Remove( item );
+                            bool success = await _fileOperationService.MoveToRecycleBinAsync(item.Path);
+                            if ( success )
+                            {
+                                await System.Windows.Application.Current.Dispatcher.InvokeAsync(() => DuplicateFiles.Remove(item));
+                                await _repository.DeleteFileRecordAsync(item.Path);
+                            }
+                            else
+                            {
+                                MessageBox.Show( $"Failed to delete { item.FileName }: Unknown error", "Error", MessageBoxButton.OK, MessageBoxImage.Error );
+                            }
                         }
                     }
                     catch ( Exception ex )
@@ -268,8 +299,55 @@ namespace SmartFileOrganizer.UI.ViewModels
                     }
                 }
                 ScanSessionStore.AllDuplicates = DuplicateFiles.ToList();
+                UpdateSelectedCount();
                 MessageBox.Show( "Selected files successfully moved to the Recycle Bin.", "Completed", MessageBoxButton.OK, MessageBoxImage.Information );
             }
+        }
+
+        private void ExecuteSmartSelect()
+        {
+            var mode = _settingsService.Current.SmartSelectionMode;
+            var groups = DuplicateFiles.GroupBy(x => x.GroupId).ToList();
+            
+            foreach (var group in groups)
+            {
+                var sorted = mode == SmartFileOrganizer.Core.Models.SmartSelectionMode.KeepOldest 
+                    ? group.OrderBy(x => 
+                      {
+                          try { return File.GetCreationTime(x.Path); }
+                          catch { return DateTime.MaxValue; }
+                      }).ToList()
+                    : group.OrderByDescending(x => 
+                      {
+                          try { return File.GetCreationTime(x.Path); }
+                          catch { return DateTime.MinValue; }
+                      }).ToList();
+
+                if (sorted.Count > 1)
+                {
+                    // Leave the first item (oldest or newest based on mode) unselected, select the rest
+                    sorted.First().IsSelected = false;
+                    foreach (var item in sorted.Skip(1))
+                    {
+                        item.IsSelected = true;
+                    }
+                }
+            }
+            
+            UpdateSelectedCount();
+        }
+
+        private string FormatSize(long bytes)
+        {
+            string[] sizes = { "B", "KB", "MB", "GB", "TB" };
+            double len = bytes;
+            int order = 0;
+            while (len >= 1024 && order < sizes.Length - 1)
+            {
+                order++;
+                len = len / 1024;
+            }
+            return $"{len:0.##} {sizes[order]}";
         }
     }
 }

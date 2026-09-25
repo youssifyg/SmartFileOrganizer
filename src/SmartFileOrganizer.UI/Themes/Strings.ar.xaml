@@ -109,4 +109,11 @@
     <system:String x:Key="StrMsgRelocationResult">تم نقل {0} ملفات ({1} بايت). تم تخطي {2} ملفات.</system:String>
     <system:String x:Key="StrLabelSelectedItemsCount">{0} عنصر</system:String>
     <FlowDirection x:Key="AppFlowDirection">RightToLeft</FlowDirection>
+    <system:String x:Key="StrSmartSelect">تحديد ذكي</system:String>
+    <system:String x:Key="StrSmartSelectPreference">تفضيل التحديد الذكي</system:String>
+    <system:String x:Key="StrKeepOldest">الاحتفاظ بالملف الأقدم</system:String>
+    <system:String x:Key="StrKeepNewest">الاحتفاظ بالملف الأحدث</system:String>
+<system:String x:Key="StrHistoryClearedTitle">تم مسح السجل</system:String>
+<system:String x:Key="StrHistoryClearedMsg">تم مسح سجل الفحص والإحصائيات بالكامل نهائياً.</system:String>
+<system:String x:Key="TempCleanupResult">تم حذف {0} ملفات ({1} بايت). تم تخطي {2} ملفات.</system:String>
 </ResourceDictionary>

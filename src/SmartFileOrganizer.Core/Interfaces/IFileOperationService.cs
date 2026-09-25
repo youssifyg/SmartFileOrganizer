@@ -6,6 +6,7 @@ namespace SmartFileOrganizer.Core.Interfaces
     public interface IFileOperationService
     {
         Task DeleteAsync(string filePath, CancellationToken cancellationToken = default);
+        Task<bool> MoveToRecycleBinAsync(string filePath);
     }
 }
 

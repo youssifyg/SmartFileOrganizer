@@ -14,129 +14,80 @@ namespace SmartFileOrganizer.UI
     {
         public IServiceProvider? ServiceProvider { get; private set; }
 
-        // ✓ مسار مركزي للـ AppData (آمن، بدون admin)
+        // Central AppData directory (safe, no admin)
         private static readonly string AppDataDir = System.IO.Path.Combine(
-            Environment.GetFolderPath( Environment.SpecialFolder.LocalApplicationData ),
-            "SmartFileOrganizer" );
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+            "SmartFileOrganizer");
 
         public App()
         {
-            // ✓ Dispatcher Exceptions - كتابة آمنة
-            this.DispatcherUnhandledException += ( s, e ) =>
+            // Bullet‑proof AppDomain crash logger writing to LocalAppData
+            AppDomain.CurrentDomain.UnhandledException += (s, e) =>
             {
-                try
-                {
-                    System.IO.Directory.CreateDirectory( AppDataDir );
-                    string logFile = System.IO.Path.Combine( AppDataDir, "async_crash1.txt" );
-                    System.IO.File.WriteAllText( logFile, e.Exception.ToString() );
-                }
-                catch ( System.Exception logEx )
-                {
-                    // Logging failed - don't crash
-                    System.Diagnostics.Debug.WriteLine( $"Failed to write crash log: {logEx.Message}" );
-                }
-                finally
-                {
-                    e.Handled = true;
-                }
-            };
-
-            // ✓ AppDomain Exceptions - كتابة آمنة
-            System.AppDomain.CurrentDomain.UnhandledException += ( s, e ) =>
-            {
-                if ( e.ExceptionObject != null )
-                {
-                    try
-                    {
-                        System.IO.Directory.CreateDirectory( AppDataDir );
-                        string logFile = System.IO.Path.Combine( AppDataDir, "async_crash2.txt" );
-                        System.IO.File.WriteAllText( logFile, e.ExceptionObject.ToString() );
-                    }
-                    catch ( System.Exception logEx )
-                    {
-                        System.Diagnostics.Debug.WriteLine( $"Failed to write crash log: {logEx.Message}" );
-                    }
-                }
-            };
-
-            // ✓ Task Scheduler Exceptions - كتابة آمنة
-            System.Threading.Tasks.TaskScheduler.UnobservedTaskException += ( s, e ) =>
-            {
-                try
-                {
-                    System.IO.Directory.CreateDirectory( AppDataDir );
-                    string logFile = System.IO.Path.Combine( AppDataDir, "async_crash3.txt" );
-                    System.IO.File.WriteAllText( logFile, e.Exception.ToString() );
-                }
-                catch ( System.Exception logEx )
-                {
-                    System.Diagnostics.Debug.WriteLine( $"Failed to write crash log: {logEx.Message}" );
-                }
-                finally
-                {
-                    e.SetObserved();  // Prevent app crash
-                }
+                var ex = e.ExceptionObject as Exception;
+                string logPath = System.IO.Path.Combine(
+                    Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                    "SmartFileOrganizer_Crash.txt");
+                System.IO.File.WriteAllText(logPath, "AppDomain Fatal Error: " + ex?.ToString());
+                System.Windows.MessageBox.Show(
+                    "Fatal Error. Check crash log in LocalAppData.",
+                    "Crash",
+                    System.Windows.MessageBoxButton.OK,
+                    System.Windows.MessageBoxImage.Error);
             };
         }
 
-        protected override async void OnStartup( StartupEventArgs e )
+        protected override async void OnStartup(StartupEventArgs e)
         {
-            base.OnStartup( e );
-
+            base.OnStartup(e);
             try
             {
-                System.Windows.Application.Current.ShutdownMode = System.Windows.ShutdownMode.OnExplicitShutdown;
-
-                var splashWindow = new SmartFileOrganizer.UI.Views.SplashWindow();
-                splashWindow.Show();
-
+                // ==== DI container build (unchanged) ==== //
                 var serviceCollection = new ServiceCollection();
+                System.IO.Directory.CreateDirectory(AppDataDir);
+                string dbPath = System.IO.Path.Combine(AppDataDir, "smartfileorganizer.db");
 
-                // ✓ استخدم AppDataDir المركزي
-                System.IO.Directory.CreateDirectory( AppDataDir );
-                string dbPath = System.IO.Path.Combine( AppDataDir, "smartfileorganizer.db" );
-                
-                serviceCollection.AddDbContext<AppDbContext>( options => 
-                    options.UseSqlite( $"Data Source={dbPath}" ) );
+                serviceCollection.AddDbContext<AppDbContext>(options =>
+                    options.UseSqlite($"Data Source={dbPath}"));
                 serviceCollection.AddSingleton<ISettingsRepository, JsonSettingsRepository>();
                 serviceCollection.AddScoped<IOperationHistoryRepository, OperationHistoryRepository>();
                 serviceCollection.AddScoped<IScanSessionRepository, ScanSessionRepository>();
 
-                // Existing Services
-                serviceCollection.AddSingleton<SmartFileOrganizer.Core.Interfaces.ISettingsService, 
+                // Existing services
+                serviceCollection.AddSingleton<SmartFileOrganizer.Core.Interfaces.ISettingsService,
                     SmartFileOrganizer.Infrastructure.Services.SettingsService>();
                 serviceCollection.AddTransient<IFileScanner, SmartFileOrganizer.Infrastructure.FileScanner>();
-                
-                // New Services
-                serviceCollection.AddSingleton<ITempCleanupService, 
+                serviceCollection.AddTransient<SmartFileOrganizer.Core.Interfaces.IFileOperationService,
+                    SmartFileOrganizer.Infrastructure.FileOperationService>();
+
+                // New services
+                serviceCollection.AddSingleton<ITempCleanupService,
                     SmartFileOrganizer.Infrastructure.Services.TempCleanupService>();
-                serviceCollection.AddSingleton<IDriveRelocationService, 
+                serviceCollection.AddSingleton<IDriveRelocationService,
                     SmartFileOrganizer.Infrastructure.Services.DriveRelocationService>();
-                serviceCollection.AddSingleton<ISimilarityEngine, 
+                serviceCollection.AddSingleton<ISimilarityEngine,
                     SmartFileOrganizer.Infrastructure.Services.PlaceholderSimilarityEngine>();
-                serviceCollection.AddSingleton<ISimilarityEngine, 
+                serviceCollection.AddSingleton<ISimilarityEngine,
                     SmartFileOrganizer.Infrastructure.Services.ImageSimilarityEngine>();
-                serviceCollection.AddTransient<ISimilarityScannerService, 
+                serviceCollection.AddTransient<ISimilarityScannerService,
                     SmartFileOrganizer.Application.Services.SimilarityScannerService>();
 
-                // Core Scanning Services (Missing from DI Review)
-                serviceCollection.AddTransient<SmartFileOrganizer.Core.Interfaces.IHashService, 
+                // Core scanning services
+                serviceCollection.AddTransient<SmartFileOrganizer.Core.Interfaces.IHashService,
                     SmartFileOrganizer.Infrastructure.HashService>();
                 serviceCollection.AddTransient<SmartFileOrganizer.Application.DuplicateEngine>();
                 serviceCollection.AddTransient<SmartFileOrganizer.Application.Services.ScanOrchestrator>();
                 serviceCollection.AddScoped<SmartFileOrganizer.Core.Interfaces.IRepository>(sp =>
                 {
-                    var dbPath = System.IO.Path.Combine(
+                    var path = System.IO.Path.Combine(
                         Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
                         "SmartFileOrganizer",
                         "smartfileorganizer.db");
-                    return new SmartFileOrganizer.Infrastructure.SQLiteRepository(dbPath);
+                    return new SmartFileOrganizer.Infrastructure.SQLiteRepository(path);
                 });
-                
-                // ✓ Logging (required by DuplicateEngine, ScanOrchestrator, etc.)
-                serviceCollection.AddLogging();
 
-                // ✓ Hash Cache (persists across scans for ~90% speedup on repeat scans)
+                // Logging and cache
+                serviceCollection.AddLogging();
                 serviceCollection.AddSingleton<SmartFileOrganizer.Core.Models.HashCacheService>();
 
                 // ViewModels and MainWindow
@@ -145,89 +96,62 @@ namespace SmartFileOrganizer.UI
                 serviceCollection.AddSingleton<OverviewViewModel>();
                 serviceCollection.AddSingleton<SettingsViewModel>();
                 serviceCollection.AddTransient<MainWindow>();
-                
+
                 ServiceProvider = serviceCollection.BuildServiceProvider();
 
-                // ✓ Apply Database Migrations safely
-                await System.Threading.Tasks.Task.Run( () =>
+                // ==== Apply pending DB migrations ==== //
+                await System.Threading.Tasks.Task.Run(() =>
                 {
                     try
                     {
-                        using ( var scope = ServiceProvider.CreateScope() )
-                        {
-                            var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-                            dbContext.Database.Migrate();
-                        }
+                        using var scope = ServiceProvider.CreateScope();
+                        var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+                        dbContext.Database.Migrate();
                     }
-                    catch ( System.Exception migrationEx )
+                    catch (Exception migrationEx)
                     {
-                        WriteDebugLog( "Migration failed: " + migrationEx.Message );
+                        WriteDebugLog($"Migration failed: {migrationEx.Message}");
                     }
-                } );
+                });
 
-                // ✓ Resolve MainWindow with dedicated DI crash guard
-                try
-                {
-                    var mainWindow = ServiceProvider.GetRequiredService<MainWindow>();
-                    mainWindow.DataContext = ServiceProvider.GetRequiredService<MainViewModel>();
-                    System.Windows.Application.Current.MainWindow = mainWindow;
-                    System.Windows.Application.Current.ShutdownMode = System.Windows.ShutdownMode.OnMainWindowClose;
-                    
-                    mainWindow.Show();
-                    splashWindow.Close();
-                }
-                catch ( System.Exception diEx )
-                {
-                    splashWindow.Close();
-                    string crashPath = System.IO.Path.Combine( AppDataDir, "fatal_crash.txt" );
-                    System.IO.Directory.CreateDirectory( AppDataDir );
-                    System.IO.File.WriteAllText( crashPath, "DI/Startup Crash: " + diEx.ToString() );
-                    System.Windows.MessageBox.Show(
-                        "Fatal error during startup. See localappdata for details.\n\n" + diEx.Message,
-                        "Startup Error",
-                        System.Windows.MessageBoxButton.OK,
-                        System.Windows.MessageBoxImage.Error );
-                    Current.Shutdown();
-                    return;
-                }
-                WriteDebugLog( "4. Show called" );
+                // ==== Initialise repository ==== //
+                var repo = ServiceProvider.GetRequiredService<SmartFileOrganizer.Core.Interfaces.IRepository>();
+                await repo.InitializeAsync();
+
+                // ==== Resolve and show MainWindow via DI ==== //
+                var mainWindow = ServiceProvider.GetRequiredService<MainWindow>();
+                mainWindow.DataContext = ServiceProvider.GetRequiredService<MainViewModel>();
+                System.Windows.Application.Current.MainWindow = mainWindow;
+                System.Windows.Application.Current.ShutdownMode = ShutdownMode.OnMainWindowClose;
+                mainWindow.Show();
             }
-            catch ( System.Exception ex )
+            catch (Exception ex)
             {
-                try
-                {
-                    System.IO.Directory.CreateDirectory( AppDataDir );
-                    string crashLogPath = System.IO.Path.Combine( AppDataDir, "fatal_crash.txt" );
-                    System.IO.File.WriteAllText( crashLogPath, ex.ToString() );
-                }
-                catch ( System.Exception logEx )
-                {
-                    System.Diagnostics.Debug.WriteLine( $"Could not write crash log: {logEx.Message}" );
-                }
-
-                System.Windows.MessageBox.Show( 
-                    ex.Message, 
-                    "Fatal Startup Error", 
-                    System.Windows.MessageBoxButton.OK, 
-                    System.Windows.MessageBoxImage.Error );
-                
-                Current.Shutdown();
+                string logPath = System.IO.Path.Combine(
+                    Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                    "SmartFileOrganizer_StartupCrash.txt");
+                System.IO.File.WriteAllText(logPath, "Startup Error: " + ex.ToString());
+                System.Windows.MessageBox.Show(
+                    "Startup Error. Check crash log in LocalAppData.",
+                    "Crash",
+                    System.Windows.MessageBoxButton.OK,
+                    System.Windows.MessageBoxImage.Error);
             }
         }
 
-        // ✓ دالة مساعدة آمنة للـ debug logging
-        private static void WriteDebugLog( string message )
+        // Helper debug logger (writes to the same AppData folder)
+        private static void WriteDebugLog(string message)
         {
             try
             {
-                System.IO.Directory.CreateDirectory( AppDataDir );
-                string logPath = System.IO.Path.Combine( AppDataDir, "startup_debug.txt" );
-                string timestamp = DateTime.Now.ToString( "yyyy-MM-dd HH:mm:ss.fff" );
-                System.IO.File.AppendAllText( logPath, $"[{timestamp}] {message}\n" );
+                System.IO.Directory.CreateDirectory(AppDataDir);
+                string logPath = System.IO.Path.Combine(AppDataDir, "startup_debug.txt");
+                string timestamp = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff");
+                System.IO.File.AppendAllText(logPath, $"[{timestamp}] {message}\n");
             }
-            catch ( System.Exception ex )
+            catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine( $"Failed to write debug log: {ex.Message}" );
+                System.Diagnostics.Debug.WriteLine($"Failed to write debug log: {ex.Message}");
             }
         }
     }
