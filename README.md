@@ -1,6 +1,6 @@
 # Smart File Organizer
 
-![App version](https://img.shields.io/badge/version-1.0.1-blue) ![.NET 8](https://img.shields.io/badge/.NET-8.0-purple) ![WPF](https://img.shields.io/badge/WPF-Windows-green) ![License](https://img.shields.io/badge/License-MIT-orange)
+![App version](https://img.shields.io/badge/version-1.0.1-blue) ![.NET 8](https://img.shields.io/badge/.NET-8.0-purple) ![WPF](https://img.shields.io/badge/WPF-Windows-green) ![License](https://img.shields.io/badge/License-MIT-orange) ![Build](https://github.com/youssifyg/SmartFileOrganizer/actions/workflows/dotnet-desktop.yml/badge.svg)
 
 Smart File Organizer is a robust desktop application designed to discover, analyze, and safely clean up duplicate and similar files across your drives without the risk of accidental data loss.
 
