@@ -1,0 +1,46 @@
+name: Build & Test
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build-and-test:
+    runs-on: windows-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Install .NET 8
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 8.0.x
+
+    - name: Restore dependencies
+      run: dotnet restore SmartFileOrganizer.sln
+
+    - name: Build (Release)
+      run: dotnet build SmartFileOrganizer.sln -c Release --no-restore
+
+    - name: Run Tests
+      run: dotnet test tests/SmartFileOrganizer.Tests/SmartFileOrganizer.Tests.csproj -c Release --no-build --verbosity normal
+
+    - name: Publish (Single-File)
+      run: >
+        dotnet publish src/SmartFileOrganizer.UI/SmartFileOrganizer.UI.csproj
+        -c Release
+        -r win-x64
+        --self-contained false
+        -p:PublishSingleFile=true
+        -o ./publish_output
+
+    - name: Upload Build Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: SmartFileOrganizer-v1.0.1
+        path: ./publish_output/SmartFileOrganizer.UI.exe
