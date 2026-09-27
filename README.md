@@ -1,5 +1,3 @@
----
-
 # Smart File Organizer
 
 ![App version](https://img.shields.io/badge/version-1.0.1-blue) ![.NET 8](https://img.shields.io/badge/.NET-8.0-purple) ![WPF](https://img.shields.io/badge/WPF-Windows-green) ![License](https://img.shields.io/badge/License-MIT-orange)
@@ -79,5 +77,3 @@ If this project helped you, please give it a ⭐ on GitHub!
 
 ## 📄 License
 This project is licensed under the [MIT License](LICENSE).
-
----
