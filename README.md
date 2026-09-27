@@ -35,7 +35,7 @@ Smart File Organizer is a robust desktop application designed to discover, analy
 - **Disk space**: 250 MB for installation (plus space for the SQLite caching database in `%LOCALAPPDATA%`)
 
 ## 📥 Installation
-1. Download the latest `SmartFileOrganizer_Setup_vX.X.X.X.exe` installer from the Releases page.
+1. Download the latest `SmartFileOrganizer_Setup_v1.0.1.exe` installer from the Releases page.
 2. Run the installer and follow the setup wizard.
 3. Launch the application from your Start Menu or Desktop shortcut.
 
@@ -45,7 +45,7 @@ Smart File Organizer is a robust desktop application designed to discover, analy
 1. **Dashboard**: View your total space saved and recent operations at a glance.
 2. **Scan**: Select a target folder or drive and initiate a scan. The system will securely hash files in the background without freezing the UI.
 3. **Review**: The application presents groups of duplicates and visually similar files.
-4. **Clean**: Choose the items you want to remove. The application recommends which file to keep based on path hierarchy and file quality.
+4. **Clean**: Choose the items you want to remove. Select which duplicates to remove — the original file is always preserved by default until you explicitly choose otherwise.
 
 ## 🗑️ Safe Delete
 Smart File Organizer operates on the principle of `Safety > Aggressive Cleanup`.
@@ -68,6 +68,14 @@ The application strictly enforces a Clean Architecture structure:
 
 ## 📋 Changelog
 For a detailed list of all new features, bug fixes, and security updates, please see the [CHANGELOG.md](CHANGELOG.md) file.
+## 🤝 Contributing
+Contributions, issues and feature requests are welcome!
+Feel free to check the [issues page](https://github.com/youssifyg/SmartFileOrganizer/issues).
+
+## ⭐ Show Your Support
+If this project helped you, please give it a ⭐ on GitHub!
+
+**GitHub:** https://github.com/youssifyg/SmartFileOrganizer
 
 ## 📄 License
 This project is licensed under the [MIT License](LICENSE).
