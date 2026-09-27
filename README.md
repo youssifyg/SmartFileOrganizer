@@ -1,33 +1,75 @@
-# SmartFileOrganizer
+---
 
-A high-performance Windows desktop application designed for advanced duplicate file detection and image similarity analysis.
+# Smart File Organizer
 
-## Features
-- **Two-Pass File Hashing:** Efficiently scans and compares large datasets to identify exact byte-for-byte duplicate files.
-- **Image Similarity Detection:** Utilizes advanced comparison algorithms to detect visually similar images, not just identical files.
-- **Optimized UI:** Built with WPF to handle heavy I/O operations without blocking the main interface.
+![App version](https://img.shields.io/badge/version-1.0.1-blue) ![.NET 8](https://img.shields.io/badge/.NET-8.0-purple) ![WPF](https://img.shields.io/badge/WPF-Windows-green) ![License](https://img.shields.io/badge/License-MIT-orange)
 
-## Technology Stack
-- **Language:** C#
-- **Framework:** .NET 8
-- **UI:** WPF ( Windows Presentation Foundation )
-- **Packaging:** Inno Setup / MSIX
+Smart File Organizer is a robust desktop application designed to discover, analyze, and safely clean up duplicate and similar files across your drives without the risk of accidental data loss.
 
-<img src="assets/Dashboard.jpg" alt="Dashboard" />
-<img src="assets/Overview.jpg" alt="Overview" />
-<img src="assets/Settings.jpg" alt="Settings" />
+## 📸 Screenshots
 
-## Development Journey & AI Integration
-This project serves as a foundational step into desktop software engineering. The development process heavily utilized AI-assisted workflows [ Antigravity desktop environment, Ollama local models ] to accelerate learning, structure the application architecture, and troubleshoot complex system-level errors.
+### Splash Screen
+![Splash Screen](assets/Splash%20logo.png)
 
-**Key Technical Challenges Resolved:**
-1. **Repository & Build Management:** Overcoming GitHub's 100MB file size limits by correctly configuring `.gitignore` for `.NET` compiled outputs ( bin / obj ) and restructuring the commit history to maintain a clean repository.
-2. **Packaging & Deployment:** Managing the transition from raw compiled binaries to professional installers using Inno Setup and MSIX packaging for Microsoft Store compatibility.
-3. **Algorithmic Efficiency:** Implementing a two-pass hashing mechanism to prevent excessive memory consumption when analyzing large volumes of files.
+### Dashboard
+![Dashboard](assets/Dashboard.jpg)
 
-## Usage
-1. Launch the application.
-2. Click 'Browse' to select a folder to scan.
-3. Click 'Start Scan' to find duplicates.
-4. Review the detected duplicates and select files to remove.
-5. Click 'Delete Selected' to clean up your space.
+### Overview
+![Overview](assets/Overview.jpg)
+
+### Settings
+![Settings](assets/Settings.jpg)
+
+## ✨ Features
+- **Duplicate Detection**: Accurately finds identical files using fast, parallel hash calculations.
+- **Visual Similarity Engine**: Detects visually similar images using SkiaSharp, helping you clean up photo libraries.
+- **Safe Delete & History**: Operations are tracked in an SQLite history database, utilizing Windows Recycle Bin to prevent permanent accidental deletion.
+- **Temp Cleanup**: Dedicated service to quickly safely clear out system and user temporary folders.
+- **Drive Relocation**: Safely move bulk files between drives with verification.
+- **Multi-language Support**: Full support for localization, including RTL (Right-to-Left) interfaces like Arabic.
+
+## 🖥️ System Requirements
+- **OS**: Windows 10 or Windows 11 (x64)
+- **Runtime**: .NET 8 Desktop Runtime
+- **Minimum RAM**: 4 GB
+- **Disk space**: 250 MB for installation (plus space for the SQLite caching database in `%LOCALAPPDATA%`)
+
+## 📥 Installation
+1. Download the latest `SmartFileOrganizer_Setup_vX.X.X.X.exe` installer from the Releases page.
+2. Run the installer and follow the setup wizard.
+3. Launch the application from your Start Menu or Desktop shortcut.
+
+*(Note: The application can also be run portably by directly downloading the single-file executable).*
+
+## 🚀 Usage
+1. **Dashboard**: View your total space saved and recent operations at a glance.
+2. **Scan**: Select a target folder or drive and initiate a scan. The system will securely hash files in the background without freezing the UI.
+3. **Review**: The application presents groups of duplicates and visually similar files.
+4. **Clean**: Choose the items you want to remove. The application recommends which file to keep based on path hierarchy and file quality.
+
+## 🗑️ Safe Delete
+Smart File Organizer operates on the principle of `Safety > Aggressive Cleanup`.
+- **Recycle Bin Integration**: Deleting files routes them to the Windows Recycle Bin by default. No permanent deletion occurs without explicit overriding.
+- **Drive Safety Guard**: Critical OS paths (`C:\Windows`, `Program Files`, etc.) are actively blocked from all scanning and modification operations.
+
+## 🏗️ Architecture
+The application strictly enforces a Clean Architecture structure:
+- **Core**: Contains domain models (`FileRecord`, `DuplicateGroup`), enums, and pure interfaces.
+- **Application**: Contains the business logic, orchestrators, and use-case handlers.
+- **Infrastructure**: Handles the external dependencies (SQLite Entity Framework, SkiaSharp image processing, Windows File System APIs).
+- **UI**: A Windows Presentation Foundation (WPF) application implementing MVVM, strictly communicating downwards.
+
+## 🛠️ Tech Stack
+- **.NET 8.0**
+- **WPF (Windows Presentation Foundation)**
+- **Microsoft.Extensions.DependencyInjection (v7.0.0)** for robust DI container support.
+- **Microsoft.EntityFrameworkCore.Sqlite (v7.0.15)** for local caching and history.
+- **SkiaSharp** for high-performance, license-free image decoding and similarity checks.
+
+## 📋 Changelog
+For a detailed list of all new features, bug fixes, and security updates, please see the [CHANGELOG.md](CHANGELOG.md) file.
+
+## 📄 License
+This project is licensed under the [MIT License](LICENSE).
+
+---

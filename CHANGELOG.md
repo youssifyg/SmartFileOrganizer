@@ -1,15 +1,21 @@
 # Changelog
 
-All notable changes to this project will be documented in this file.
+## [1.0.1] - 2026-09-25
 
-## [1.0.1] - 2026-09-24
-### Fixed
-- Fixed critical null parameter exception in SQLite database session save.
-- Fixed unhandled IO exceptions on protected files causing the DuplicateEngine to crash.
-- Fixed cancellation token bug during hash calculations to throw properly.
-- Resolved high-severity security vulnerability in `SixLabors.ImageSharp` by upgrading to 4.1.2.
-- Updated Dashboard scan operation to run on a background thread using `IAsyncEnumerable` to prevent UI freezing.
-
-## [1.0.0] - 2026-09-20
 ### Added
-- Initial Release of Smart File Organizer.
+- Implemented a custom WPF splash screen to mask background Dependency Injection and database initialization during startup.
+- Introduced a comprehensive `AppDomain` crash logger to gracefully catch and write unhandled exceptions to `%LOCALAPPDATA%`.
+- Native SQLite library extraction (`IncludeNativeLibrariesForSelfExtract`) enabled for seamless single-file portable deployments.
+
+### Fixed
+- Fixed critical application startup deadlocks caused by synchronous Dispatcher conflicts.
+- Offloaded duplicate scan processing to background threads utilizing `IAsyncEnumerable`, preventing UI freezing during heavy IO operations.
+- Fixed `DllNotFoundException` for SQLite occurring in self-contained publishing scenarios.
+- Prevented crashes when encountering locked or protected files within the Duplicate Engine.
+- Resolved Null Reference Exceptions inside SQLite parameters that caused unexpected scan aborts.
+- Fixed UI localization state issues, ensuring language change events correctly propagate across ViewModels.
+
+### Security
+- Migrated the visual similarity image processing engine to **SkiaSharp** to avoid strict commercial license blocks and address high-severity vulnerabilities associated with older imaging libraries.
+
+---
