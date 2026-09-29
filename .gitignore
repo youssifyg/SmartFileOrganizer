@@ -482,3 +482,5 @@ $RECYCLE.BIN/
 *.swp
 *.txt
 *.dmp
+
+publish_final/

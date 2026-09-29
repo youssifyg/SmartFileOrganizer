@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
     <TargetFramework>net8.0-windows</TargetFramework>
@@ -10,6 +10,7 @@
     <DisableImplicitNamespaceImports_WindowsForms>true</DisableImplicitNamespaceImports_WindowsForms>
     <ApplicationIcon>Assets\Branding\SmartFileOrganizer.ico</ApplicationIcon>
     <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\\..\\src\\SmartFileOrganizer.Application\\SmartFileOrganizer.Application.csproj" />
@@ -32,3 +33,4 @@
   <Page Include="App.xaml" />
 </ItemGroup>
 </Project>
+

@@ -1,18 +1,20 @@
-#define MyAppName "File Organizer - Auto Clean & Sort"
-#define MyAppVersion "1.0.1.0"
+﻿#define MyAppName "File Organizer - Auto Clean & Sort"
+#define MyAppVersion "1.0.2.0"
 #define MyAppPublisher "YoussifYG"
 #define MyAppExeName "SmartFileOrganizer.UI.exe"
-#define PublishDir "C:\Users\Youssef\.gemini\antigravity\scratch\SmartFileOrganizer\publish_msix_final"
+#define PublishDir "publish"
 
 [Setup]
+ArchitecturesAllowed=x64
+ArchitecturesInstallIn64BitMode=x64
 AppId={{D3E8E421-44B6-4B11-8A4E-7BC188F35DE2}
 AppName={#MyAppName}
 AppVersion={#MyAppVersion}
 AppPublisher={#MyAppPublisher}
 DefaultDirName={autopf}\SmartFileOrganizer
 DefaultGroupName={#MyAppName}
-OutputDir=D:\Work
-OutputBaseFilename=SmartFileOrganizer_Setup_v1.0.1.0
+OutputDir=EXE
+OutputBaseFilename=FileOrganizer_Setup_1.0.2.0_UNSIGNED
 Compression=lzma
 SolidCompression=yes
 WizardStyle=modern
@@ -21,7 +23,7 @@ CloseApplications=yes
 UsedUserAreasWarning=no
 
 [Files]
-Source: "{#PublishDir}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "{#PublishDir}\*"; DestDir: "{app}"; Excludes: "*.pdb"; Flags: ignoreversion
 
 [Icons]
 Name: "{group}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"
@@ -32,4 +34,3 @@ Filename: "{app}\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#StringChang
 
 [UninstallDelete]
 Type: filesandordirs; Name: "{app}"
-Type: filesandordirs; Name: "{localappdata}\SmartFileOrganizer"
